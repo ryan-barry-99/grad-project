@@ -5,7 +5,7 @@ The robot is capable of walking, I have a bunch of videos on my [YouTube channel
 
 If you are interested in the C++ version, make sure to check [this](https://github.com/lnotspotl/notspot_sim_cpp) repository out.
 
-<img src="resources/notspot_render_new1" width="233"> <img src="resources/notspot_render_new2" width="233"> <img src="resources/notspot_render_new3" width="233"> 
+<img src="notspot_sim_py/resources/notspot_render_new1" width="233"> <img src="notspot_sim_py/resources/notspot_render_new2" width="233"> <img src="notspot_sim_py/resources/notspot_render_new3" width="233"> 
 
 ## Setup
 ```
@@ -30,16 +30,16 @@ Rest controller, Stand Controller, Trot gait controller and Crawl gait controlle
 Gazebo.
 
 ### Rest Controller
-<img src="resources/1rest_controller.gif" width="400">
+<img src="notspot_sim_py/resources/1rest_controller.gif" width="400">
 
 ### Stand Controller
-<img src="resources/1stand_controller.gif" width="400">
+<img src="notspot_sim_py/resources/1stand_controller.gif" width="400">
 
 ### Trot Gait Controller
-<img src="resources/1trot_gait_controller.gif" width="400">
+<img src="notspot_sim_py/resources/1trot_gait_controller.gif" width="400">
 
 ### Crawl Gait Controller
-<img src="resources/1crawl_gait_controller.gif" width="400">
+<img src="notspot_sim_py/resources/1crawl_gait_controller.gif" width="400">
 
 
 ## Other notes
