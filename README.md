@@ -1,6 +1,6 @@
 # Notspot robot simulation - Python version
 Note: I did not create this robot description or the locomotion controllers described below. Find the oroginal repository [here](https://github.com/lnotspotl/notspot_sim_py). 
-I added the ability to drive it with ROS via /cmd_vel, as well as spawn it into simulation to fit my application
+I added the ability to [drive it with ROS via /cmd_vel](https://github.com/ryan-barry-99/grad-project/blob/main/notspot_sim_py/src/notspot_joystick/scripts/JoystickEmulator.py), as well as spawn it into simulation to fit my application
 
 
 This repository contains all the files and code needed to simulate the notspot quadrupedal robot using [Gazebo](http://gazebosim.org/)  and [ROS](https://www.ros.org/).
