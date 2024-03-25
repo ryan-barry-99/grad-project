@@ -2,6 +2,8 @@
 Note: I did not create this robot description or the locomotion controllers described below. Find the original repository [here](https://github.com/lnotspotl/notspot_sim_py). 
 I added the ability to [drive it with ROS via /cmd_vel](https://github.com/ryan-barry-99/grad-project/blob/main/notspot_sim_py/src/notspot_joystick/scripts/JoystickEmulator.py), added a sensor suite including a RealSense camera and Velodyne LiDAR scanner, and added the ability to [spawn it into Gazebo](https://github.com/ryan-barry-99/grad-project/blob/main/notspot_sim_py/src/notspot_gazebo/scripts/robot_spawner.py) to fit my application
 
+<img src="notspot_sim_py/resources/sensors.png" width="233">
+
 
 This repository contains all the files and code needed to simulate the notspot quadrupedal robot using [Gazebo](http://gazebosim.org/)  and [ROS](https://www.ros.org/).
 The software runs on [ROS noetic](http://wiki.ros.org/noetic) and [Ubuntu 20.04](http://www.releases.ubuntu.com/20.04/). If you want to use a different ROS version, you might have to do some changes to the source code.
