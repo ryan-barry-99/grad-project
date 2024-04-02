@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="icy_ramp">
+    <link name="link">
+      <!-- Flat Plane -->
+      <visual name="flat_plane">
+        <geometry>
+          <box>
+            <size>10 10 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0 0 0 1</ambient>
+          <diffuse>0 0 0 1</diffuse>
+          <specular>0 0 0 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
+        <pose>0 0 0 0 0 0</pose>
+      </visual>
+      
+      <!-- Upward Slope -->
+      <visual name="upward_slope">
+        <geometry>
+          <box>
+            <size>10 10 2</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0 0 0 1</ambient>
+          <diffuse>0 0 0 1</diffuse>
+          <specular>0 0 0 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
+        <pose>0 0 0 0 0 0</pose> <!-- Adjust position and orientation -->
+      </visual>
+      
+      <!-- Downward Slope -->
+      <visual name="downward_slope">
+        <geometry>
+          <box>
+            <size>10 10 2</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0 0 0 1</ambient>
+          <diffuse>0 0 0 1</diffuse>
+          <specular>0 0 0 1</specular>
+          <emissive>0 0 0 1</emissive>
+        </material>
+        <pose>0 0 0 0 0 0</pose> <!-- Adjust position and orientation -->
+      </visual>
+    </link>
+  </model>
+</sdf>

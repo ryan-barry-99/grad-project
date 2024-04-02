@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<sdf version="1.7">
+    <model name="ramp">
+        <static>true</static>
+        <link name="link">
+            <pose>0 0 0 0 0 0</pose>
+            <visual name="visual">
+                <geometry>
+                    <mesh>
+                        <uri>model://ramp/meshes/ramp.stl</uri>
+                    </mesh>
+                </geometry>
+                <!-- Add a material with a black color -->
+                <material>
+                    <ambient>0 0 0 1</ambient>
+                    <diffuse>0 0 0 1</diffuse>
+                </material>
+            </visual>
+        </link>
+    </model>
+</sdf>
