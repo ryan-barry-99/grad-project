@@ -10,7 +10,7 @@ class Reward:
         rospy.init_node('reward_node', anonymous=True)
         
         rospy.Subscriber('/gazebo/model_poses/robot/notspot', PoseStamped, self.robot_pose_callback)
-        rospy.Subscriber('/heuristic/goal/closest', PoseStamped, self.heuristic_callback)
+        rospy.Subscriber('/heuristic/goal/closest', Heuristic, self.heuristic_callback)
         rospy.Subscriber('/episode/new', Bool, self.new_episode_callback)
         self.robot_pose_stamped = PoseStamped()
         self.publishers = {
@@ -19,6 +19,7 @@ class Reward:
         }
         self.closest_heuristic = Heuristic()
         self.total_reward = 0
+        self.episode_num = 0
         self.run()
 
     def robot_pose_callback(self, msg: PoseStamped):
@@ -31,4 +32,15 @@ class Reward:
         pass
 
     def new_episode_callback(self, msg: Bool):
+        with open(f'rewards/episode_{self.episode_num}.txt', 'w')as f:
+            f.write(str(self.total_reward))
+        self.episode_num += 1
         self.total_reward = 0
+
+    def run(self):
+        rate = rospy.Rate(10)
+        while not rospy.is_shutdown():
+            rate.sleep()
+
+if __name__ == '__main__':
+    reward = Reward()
