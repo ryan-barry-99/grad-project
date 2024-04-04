@@ -10,6 +10,9 @@
     <node name="reward" pkg="reinforcement_learning" type="reward.py" output="screen"/>
 
     <!-- Policy network -->
-    <node name="policy" pkg="reinforcement_learning" type="policy_network.py" output="screen"/>
+    <node name="policy_network" pkg="reinforcement_learning" type="policy_network.py" output="screen">
+        <!-- Hyperparameters for the model -->
+        <rosparam command="load" file="$(find reinforcement_learning)/config/hyperparameters.yaml"/>
+    </node>
   
 </launch>

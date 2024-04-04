@@ -126,16 +126,36 @@
     </model>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>-7.70341 5.59025 85.5151 0 1.4938 -1.61108</pose>
+        <pose>14.4499 63.9816 152.791 0 1.2618 -2.1271</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
     </gui>
     <state world_name='default'>
-      <sim_time>11108 45000000</sim_time>
-      <real_time>390 497318748</real_time>
-      <wall_time>1712027667 516603378</wall_time>
-      <iterations>385904</iterations>
+      <sim_time>11284 478000000</sim_time>
+      <real_time>190 187167544</real_time>
+      <wall_time>1712250212 92452020</wall_time>
+      <iterations>176433</iterations>
+      <model name='Construction Cone'>
+        <pose>29.5661 22.4058 -0 1e-06 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>29.5661 22.4058 -0 1e-06 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>-0 -0 -9.79994 1.5e-05 1e-05 0</acceleration>
+          <wrench>-0 -0 -9.79994 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='Construction Cone_0'>
+        <pose>-30.1739 -27.0591 -0 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>-30.1739 -27.0591 -0 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 -0 -0.008512 -2.58585 1.13682 3.14159</acceleration>
+          <wrench>0 -0 -0.008512 0 -0 0</wrench>
+        </link>
+      </model>
       <model name='dry_ramp_clone'>
         <pose>3.79628 -15.819 0 0 0 -0.804929</pose>
         <scale>1 2 1</scale>
@@ -520,7 +540,6 @@
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
-      
       <model name='walkway_metal_straight'>
         <pose>19.8207 3.70858 0 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -3362,7 +3381,6 @@
         <kinematic>0</kinematic>
       </link>
     </model>
-    
     <model name='walkway_metal_straight'>
       <static>1</static>
       <link name='link'>
@@ -3552,6 +3570,106 @@
         <kinematic>0</kinematic>
       </link>
       <pose>-13.6062 20.2546 0 0 -0 0</pose>
+    </model>
+    <model name='Construction Cone'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <scale>10 10 10</scale>
+              <uri>model://construction_cone/meshes/construction_cone.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <scale>10 10 10</scale>
+              <uri>model://construction_cone/meshes/construction_cone.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <inertial>
+          <pose>0 0 0 0 -0 0</pose>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+          <mass>1</mass>
+        </inertial>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <pose>30 23 0 0 -0 0</pose>
+    </model>
+    <model name='Construction Cone_0'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <scale>10 10 10</scale>
+              <uri>model://construction_cone/meshes/construction_cone.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <scale>10 10 10</scale>
+              <uri>model://construction_cone/meshes/construction_cone.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <inertial>
+          <pose>0 0 0 0 -0 0</pose>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+          <mass>1</mass>
+        </inertial>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <pose>-30 -27 0 0 -0 0</pose>
     </model>
     <material>
       <script>

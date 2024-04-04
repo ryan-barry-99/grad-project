@@ -53,3 +53,10 @@ models:
   - model_name: dry_ramp_clone_2
     namespace: dry_ramp
     tag: 3
+
+  - model_name: Construction Cone
+    namespace: environment_bounds
+    tag: 0
+  - model_name: Construction Cone_0
+    namespace: environment_bounds
+    tag: 1
