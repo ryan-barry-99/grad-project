@@ -8,6 +8,9 @@
 
     <!-- Calculate rewards -->
     <node name="reward" pkg="reinforcement_learning" type="reward.py" output="screen"/>
+    
+    <!-- Set Runs Folder -->
+    <node name="runs_manager" pkg="reinforcement_learning" type="run_manager.py" output="screen"/>
 
     <!-- Policy network -->
     <node name="policy_network" pkg="reinforcement_learning" type="policy_network.py" output="screen">
