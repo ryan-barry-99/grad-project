@@ -1,0 +1,10 @@
+<launch>
+
+    <!-- Publish the goal heuristics -->
+    <node name="heuristic" pkg="reinforcement_learning" type="heuristic.py" output="screen">
+        <!-- Parameters for the node -->
+        <rosparam command="load" file="$(find notspot_gazebo)/config/models.yaml"/>
+    </node>
+
+  
+</launch>

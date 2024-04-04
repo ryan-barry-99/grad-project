@@ -20,7 +20,7 @@ class RobotSpawner:
 
         self.rospack = rospkg.RosPack()
         self.urdf_path = self.rospack.get_path('notspot_description') + '/urdf/notspot.urdf.xacro'
-        self.robot_name = 'notspot'
+        self.robot_name = 'notspot_gazebo'
         self.robot_exists = True
         
         # Process the URDF file using the xacro command-line tool
@@ -34,7 +34,7 @@ class RobotSpawner:
         rospy.wait_for_service('/gazebo/spawn_urdf_model')
         try:
             if not self.robot_exists:
-                self.robot_exists = self.spawn_service('notspot', self.urdf_xml, 'notspot/', self.pose, 'world')
+                self.robot_exists = self.spawn_service(self.robot_name, self.urdf_xml, 'notspot/', self.pose, 'world')
                 if self.robot_exists:
                     rospy.loginfo("Robot spawned successfully")
                 else:
@@ -47,7 +47,7 @@ class RobotSpawner:
     def remove_robot(self):
         rospy.wait_for_service('/gazebo/delete_model')
         try:
-            self.delete_service('notspot')
+            self.delete_service(self.robot_name)
             self.robot_exists = False
             
         except rospy.ServiceException as e:

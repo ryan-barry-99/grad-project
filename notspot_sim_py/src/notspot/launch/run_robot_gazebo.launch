@@ -6,10 +6,9 @@
     <!-- Joystick -->
     <include file="$(find notspot_joystick)/launch/joystick_emulator.launch" />
 
-    <!-- Robot Controller -->
-    <include 
-        file="$(find notspot_controller)/launch/robot_controller.launch"/>
-        
+    <!-- RL Application -->
+    <include file="$(find reinforcement_learning)/launch/reinforcement_learning.launch" />
+
     <!-- arguments for the urdf xacro file, rviz visualization and namespace -->
     <node pkg="robot_state_publisher" type="robot_state_publisher"  name="realsense_camera">
       <param name="publish_frequency" type="double" value="30.0" />

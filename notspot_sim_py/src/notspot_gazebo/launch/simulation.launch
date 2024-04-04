@@ -11,6 +11,8 @@
     <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg robot)" />
     <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -z 0.5 -model notspot_gazebo"/>
     <node name="robot_reset" pkg="notspot_gazebo" type="robot_reset.py" output="screen"/>
+    <!-- <node name="robot_spawner" pkg="notspot_gazebo" type="robot_spawner.py" output="screen"/> -->
+
 
 
     <!-- Controllers -->
@@ -27,25 +29,17 @@
       <param name="publish_frequency" type="double" value="10" />
     </node>
 
-    <!-- Publish the positions for ice models and the robot -->
-    <!-- <node name="ice_model_1_position" pkg="notspot_gazebo" type="model_position_subscriber.py" output="screen">
-        <param name="model_name" value="ice_model"/>
+
+    <!-- Robot Controller -->
+    <include 
+        file="$(find notspot_controller)/launch/robot_controller.launch"/>
+
+
+    <!-- Publish the positions of models -->
+    <node name="model_pose_subscriber" pkg="notspot_gazebo" type="model_pose_subscriber.py" output="screen">
+        <!-- Parameters for the node -->
+        <rosparam command="load" file="$(find notspot_gazebo)/config/models.yaml"/>
     </node>
 
-    <node name="ice_model_2_position" pkg="notspot_gazebo" type="model_position_subscriber.py" output="screen">
-        <param name="model_name" value="ice_model_2"/>
-    </node>
-
-    <node name="ice_model_3_position" pkg="notspot_gazebo" type="model_position_subscriber.py" output="screen">
-        <param name="model_name" value="ice_model_3"/>
-    </node>
-
-    <node name="ice_model_4_position" pkg="notspot_gazebo" type="model_position_subscriber.py" output="screen">
-        <param name="model_name" value="ice_model_4"/>
-    </node> -->
-
-    <!-- <node name="notspot_position" pkg="notspot_gazebo" type="model_position_subscriber.py" output="screen">
-        <param name="model_name" value="notspot_gazebo"/>
-    </node> -->
   
 </launch>
