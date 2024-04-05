@@ -28,9 +28,9 @@ class GenerateHeuristic:
 
     def goal_pose_callback(self, msg: PoseStamped, tag):
         self.heuristics[tag] = Heuristic()
-        self.heuristics[tag].x = self.robot_pose_stamped.pose.position.x - msg.pose.position.x
-        self.heuristics[tag].y = self.robot_pose_stamped.pose.position.y - msg.pose.position.y
-        self.heuristics[tag].manhattan_distance = abs(self.heuristics[tag].x) + abs(self.heuristics[tag].y)
+        self.heuristics[tag].x_distance = self.robot_pose_stamped.pose.position.x - msg.pose.position.x
+        self.heuristics[tag].y_distance = self.robot_pose_stamped.pose.position.y - msg.pose.position.y
+        self.heuristics[tag].manhattan_distance = abs(self.heuristics[tag].x_distance) + abs(self.heuristics[tag].y_distance)
         self.publishers[tag].publish(self.heuristics[tag])  # Use 'tag' to access the correct publisher
 
     def run(self):
