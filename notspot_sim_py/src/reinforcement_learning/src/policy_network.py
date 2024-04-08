@@ -7,6 +7,7 @@ import numpy as np
 import cv2
 from cv_bridge import CvBridge
 import torch
+from reinforcement_learning.msg import Heuristic
 
 
 def ros_image_to_pytorch_tensor(ros_image):
@@ -47,9 +48,13 @@ class PolicyNetwork:
 
         rospy.Subscriber('/realsense/color/image_raw', Image, self.image_callback)
         rospy.Subscriber('/occupancy_grid', OccupancyGrid, self.occupancy_grid_callback)
+        rospy.Subscriber('heuristic/goal/closest', Heuristic, self.heuristic_callback)
 
         self.image_tensor = Image()
         self.occupancy_grid = np.empty(100)
+        self.heuristic = Heuristic()
+        self.image_pub = rospy.Publisher("/occupancy_image", Image, queue_size=10)
+        self.bridge = CvBridge()
 
         # Run the main loop
         self.main_loop()
@@ -62,8 +67,23 @@ class PolicyNetwork:
         self.image_tensor = ros_image_to_pytorch_tensor(img)
 
     def occupancy_grid_callback(self, occupancy_grid: OccupancyGrid):
+        occupancy_grid_np = np.array(occupancy_grid.data).reshape((100, 100))
+        
+        # Map values: 100 to 0 (black) and -1 to 255 (white)
+        # First, normalize -1 to 1, then invert (1 to 0, 0 to 1), finally scale to 255
+        image_np = np.interp(occupancy_grid_np, [-1, 100], [1, 0])
+        image_np = (image_np * 255).astype(np.uint8)
+        
+        # Convert numpy array to ROS Image message
+        image_msg = self.bridge.cv2_to_imgmsg(image_np, encoding="mono8")
+        
+        # Publish the image
+        self.image_pub.publish(image_msg)
         self.occupancy_grid = np.array(occupancy_grid.data).reshape((100,100))
         self.occupancy_grid = torch.from_numpy(self.occupancy_grid).float()
+
+    def heuristic_callback(self, msg: Heuristic):
+        self.heuristic = msg
 
 
 if __name__ == '__main__':
