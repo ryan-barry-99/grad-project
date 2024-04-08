@@ -6,6 +6,9 @@
         <rosparam command="load" file="$(find notspot_gazebo)/config/models.yaml"/>
     </node>
 
+    <!-- Create and publish an occupancy grid -->
+    <node name="octomap_generator" pkg="reinforcement_learning" type="octomap_generator" output="screen"/>
+
     <!-- Calculate rewards -->
     <node name="reward" pkg="reinforcement_learning" type="reward.py" output="screen"/>
     

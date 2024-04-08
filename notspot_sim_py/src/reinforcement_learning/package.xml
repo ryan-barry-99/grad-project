@@ -78,6 +78,8 @@
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>tf</exec_depend>
   <exec_depend>message_runtime</exec_depend>
+  <build_depend>octomap</build_depend>
+  <exec_depend>octomap</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
