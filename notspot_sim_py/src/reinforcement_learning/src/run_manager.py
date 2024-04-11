@@ -4,14 +4,21 @@ import rospy
 import rospkg
 import os
 from datetime import datetime
+from std_msgs.msg import Bool, String
 
 class RunsManager:
     def __init__(self):
+        rospy.init_node("run_manager")
+
         self.rospack = rospkg.RosPack()
         self.rewards_folder = self.rospack.get_path('reinforcement_learning') + '/runs'
 
         self.init_rewards_dir = False
         self.set_runs_folder()
+
+        rospy.Subscriber('/RL/episode/new', Bool, self.new_episode_callback)
+        self.reset_pub = rospy.Publisher('/robot_reset_command', String, queue_size=10)
+        rospy.spin()
 
 
     def set_runs_folder(self):
@@ -40,6 +47,11 @@ class RunsManager:
 
                 rospy.set_param('/RL/runs/runs_folder', self.runs_folder)
                 rospy.set_param('/RL/runs/rewards_folder', self.rewards_folder)
+
+    def new_episode_callback(self, msg: Bool):
+        if msg.data:
+            self.reset_pub.publish("reset")
+
 
 
 if __name__ == '__main__':

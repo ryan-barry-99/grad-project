@@ -28,9 +28,9 @@ class PolicyNetwork(nn.Module):
     def __init__(self):
         super(PolicyNetwork, self).__init__()
         # Initialize CNN branches with appropriate input channels
-        out_sz = 64
+        out_sz = 16
         self.rgb_branch = CNNBranch(in_channels=3, scaler=4800, output_size=out_sz)  # RGB image
-        self.depth_branch = CNNBranch(in_channels=1, scaler=14400, output_size=out_sz)  # Depth image
+        self.depth_branch = CNNBranch(in_channels=1, scaler=225, output_size=out_sz)  # Depth image
         self.grid_branch = CNNBranch(in_channels=1, scaler=2.25, output_size=out_sz)  # Grid image
         
         # Dense network
@@ -44,13 +44,14 @@ class PolicyNetwork(nn.Module):
         # Assuming inputs are single instances, ensure they're correctly batched
         # No need to unsqueeze if inputs already have a batch dimension
         rgb_out = self.rgb_branch(rgb)
-        depth_out = self.depth_branch(depth.unsqueeze(0).unsqueeze(0))
+        depth_out = self.depth_branch(depth.unsqueeze(0))
         grid_out = self.grid_branch(grid.unsqueeze(0))
         
         # Ensure 'heuristic' is correctly shaped: [1, num_goals * 3]
         # Adjust as necessary to match your specific input shape requirements
         heuristic_flattened = heuristic.view(1, -1)
-        
+        rospy.loginfo(f"{rgb_out.size(), depth_out.size(), grid_out.size(), heuristic_flattened.size()}")
+        rospy.loginfo(f"{depth_out}")
         # Concatenate outputs: Ensure dimensions align for concatenation
         combined = torch.cat((rgb_out, depth_out, grid_out, heuristic_flattened), dim=1)
         

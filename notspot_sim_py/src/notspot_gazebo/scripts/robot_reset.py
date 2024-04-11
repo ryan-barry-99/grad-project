@@ -17,7 +17,7 @@ class RobotSpawner:
         self.rospack = rospkg.RosPack()
         self.urdf_path = self.rospack.get_path('notspot_description') + '/urdf/notspot.urdf.xacro'
         self.set_state_service = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
-        self.robot_name = 'notspot'
+        self.robot_name = 'notspot_gazebo'
         self.robot_exists = True
         
         # Process the URDF file using the xacro command-line tool

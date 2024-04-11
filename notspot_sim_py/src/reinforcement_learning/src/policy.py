@@ -75,7 +75,7 @@ class Policy:
     def main_loop(self):
         while not rospy.is_shutdown():
             self.gait_pub.publish(self.gait)
-            self.predict_velocity()
+            # self.predict_velocity()
 
     def predict_velocity(self):
         if all(self.new_data):
@@ -99,16 +99,15 @@ class Policy:
 
     def rgb_image_callback(self, img: Image):
         # Tensor of size ([480, 640, 3])
-        self.new_data[0] = True
         self.rgb_tensor = ros_image_to_pytorch_tensor(img)
+        self.new_data[0] = True
         
     def depth_image_callback(self, img: Image):
         # Tensor of size ([720, 1280])
-        self.new_data[1] = True
         self.depth_tensor = ros_image_to_pytorch_tensor(img)
+        self.new_data[1] = True
 
     def occupancy_grid_callback(self, occupancy_grid: OccupancyGrid):
-        self.new_data[2] = True
         # occupancy_grid_np = np.array(occupancy_grid.data).reshape((100, 100))
         
         # # Map values: 100 to 0 (black) and -1 to 255 (white)
@@ -125,12 +124,13 @@ class Policy:
 
         # Tensor of size ([100, 100])
         self.occupancy_grid = torch.from_numpy(grid).float()
+        self.new_data[2] = True
         # rospy.loginfo(f"occupancy grid tensor of size {self.occupancy_grid.size()}")
 
 
     def heuristic_callback(self, msg, goal):
-        self.new_data[3] = True
         self.heuristic_tensor[goal] = torch.tensor([msg.x_distance, msg.y_distance, msg.manhattan_distance])
+        self.new_data[3] = True
 
     
 
