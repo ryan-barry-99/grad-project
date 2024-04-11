@@ -25,6 +25,9 @@ class EmulateJoystick(object):
         
         
     def set_gait(self, gait):
+        if not self.robot_exists:
+            rospy.set_param("/robot_exists", True)
+            self.robot_exists = True
         self._gait = gait.data
         self.joy.buttons = [0,0,0,0,0,0,0,0,0,0,0]  # Reset all buttons
         

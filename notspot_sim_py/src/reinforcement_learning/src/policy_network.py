@@ -1,90 +1,51 @@
-#!/usr/bin/env python3
-
-import rospy
-from sensor_msgs.msg import Image
-from nav_msgs.msg import OccupancyGrid
-import numpy as np
-import cv2
-from cv_bridge import CvBridge
 import torch
-from reinforcement_learning.msg import Heuristic
+import torch.nn as nn
+import torch.nn.functional as F
 
 
-def ros_image_to_pytorch_tensor(ros_image):
-    # Initialize the CvBridge
-    bridge = CvBridge()
-    
-    # Convert the ROS Image message to a CV2 image (numpy array)
-    cv_image = bridge.imgmsg_to_cv2(ros_image, desired_encoding='passthrough')
-    
-    # Optionally, convert the image color (e.g., if the model expects RGB but the image is BGR)
-    cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
-    
-    # Convert the numpy array to a PyTorch tensor
-    tensor_image = torch.from_numpy(cv_image)
-    
-    # If the image is not grayscale, permute the dimensions from HWC to CHW
-    if len(tensor_image.shape) == 3:
-        tensor_image = tensor_image.permute(2, 0, 1)
-    
-    # Add a batch dimension with unsqueeze if necessary
-    tensor_image = tensor_image.unsqueeze(0)
-    
-    # Normalize the tensor to [0, 1] if your model expects that
-    tensor_image = tensor_image.float() / 255.0
-    
-    return tensor_image
+class CNNBranch(nn.Module):
+    def __init__(self, in_channels, output_size):
+        super(CNNBranch, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels, 16, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.fc = nn.Linear(64, output_size)  # Adjust output_size based on feature requirement
 
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = self.pool(F.relu(self.conv3(x)))
+        # Flatten
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.fc(x))
+        return x
 
-class PolicyNetwork:
+class PolicyNetwork(nn.Module):
     def __init__(self):
-        rospy.init_node('policy_network_node', anonymous=True)
-        # Load hyperparameters from YAML file
-        self.hyperparameters = rospy.get_param('/policy_network/hyperparameters', default={})[0]
-        if not self.hyperparameters['load_model']:
-            rospy.set_param('/RL/runs/new_run', True)
-        else:
-            rospy.set_param('/RL/runs/new_run', False)
-
-        rospy.Subscriber('/realsense/color/image_raw', Image, self.image_callback)
-        rospy.Subscriber('/occupancy_grid', OccupancyGrid, self.occupancy_grid_callback)
-        rospy.Subscriber('heuristic/goal/closest', Heuristic, self.heuristic_callback)
-
-        self.image_tensor = Image()
-        self.occupancy_grid = np.empty(100)
-        self.heuristic = Heuristic()
-        self.image_pub = rospy.Publisher("/occupancy_image", Image, queue_size=10)
-        self.bridge = CvBridge()
-
-        # Run the main loop
-        self.main_loop()
-
-    def main_loop(self):
-        rospy.spin()
-
-
-    def image_callback(self, img: Image):
-        self.image_tensor = ros_image_to_pytorch_tensor(img)
-
-    def occupancy_grid_callback(self, occupancy_grid: OccupancyGrid):
-        occupancy_grid_np = np.array(occupancy_grid.data).reshape((100, 100))
+        super(PolicyNetwork, self).__init__()
+        # Initialize CNN branches with appropriate input channels
+        self.rgb_branch = CNNBranch(in_channels=3, output_size=64)  # RGB image
+        self.depth_branch = CNNBranch(in_channels=1, output_size=64)  # Depth image
+        self.grid_branch = CNNBranch(in_channels=1, output_size=64)  # Grid image
         
-        # Map values: 100 to 0 (black) and -1 to 255 (white)
-        # First, normalize -1 to 1, then invert (1 to 0, 0 to 1), finally scale to 255
-        image_np = np.interp(occupancy_grid_np, [-1, 100], [1, 0])
-        image_np = (image_np * 255).astype(np.uint8)
+        # Dense network
+        self.fc1 = nn.Linear(64 * 3, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 3)  # Output layer with 3 outputs
+
+    def forward(self, rgb, depth, grid):
+        # Process inputs through their respective branches
+        rgb_out = self.rgb_branch(rgb)
+        depth_out = self.depth_branch(depth)
+        grid_out = self.grid_branch(grid)
         
-        # Convert numpy array to ROS Image message
-        image_msg = self.bridge.cv2_to_imgmsg(image_np, encoding="mono8")
+        # Concatenate outputs
+        combined = torch.cat((rgb_out, depth_out, grid_out), dim=1)
         
-        # Publish the image
-        self.image_pub.publish(image_msg)
-        self.occupancy_grid = np.array(occupancy_grid.data).reshape((100,100))
-        self.occupancy_grid = torch.from_numpy(self.occupancy_grid).float()
+        # Dense network
+        x = F.relu(self.fc1(combined))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
 
-    def heuristic_callback(self, msg: Heuristic):
-        self.heuristic = msg
-
-
-if __name__ == '__main__':
-    model = PolicyNetwork() 
+        return x

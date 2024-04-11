@@ -7,7 +7,10 @@
     </node>
 
     <!-- Create and publish an occupancy grid -->
-    <node name="octomap_generator" pkg="reinforcement_learning" type="octomap_generator" output="screen"/>
+    <!-- <node name="octomap_generator" pkg="reinforcement_learning" type="octomap_generator" output="screen"/> -->
+    <!-- Instance with origin at the center of the grid -->
+    <!-- Configuration for the Lidar-based Octomap Generator -->
+    <node name="octomap_generator_velodyne" pkg="reinforcement_learning" type="octomap_generator" output="screen" args="/velodyne_points /gazebo/model_poses/robot/notspot occupancy_grid/velodyne -5.0 -5.0" />
 
     <!-- Calculate rewards -->
     <node name="reward" pkg="reinforcement_learning" type="reward.py" output="screen"/>
@@ -16,7 +19,7 @@
     <node name="runs_manager" pkg="reinforcement_learning" type="run_manager.py" output="screen"/>
 
     <!-- Policy network -->
-    <node name="policy_network" pkg="reinforcement_learning" type="policy_network.py" output="screen">
+    <node name="policy_network" pkg="reinforcement_learning" type="policy.py" output="screen">
         <!-- Hyperparameters for the model -->
         <rosparam command="load" file="$(find reinforcement_learning)/config/hyperparameters.yaml"/>
     </node>
