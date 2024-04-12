@@ -18,6 +18,9 @@
     <!-- Set Runs Folder -->
     <node name="runs_manager" pkg="reinforcement_learning" type="run_manager.py" output="screen"/>
 
+
+    <node name="state_machine" pkg="reinforcement_learning" type="state_machine.py" output="screen"/>
+
     <!-- Policy network -->
     <node name="policy_network" pkg="reinforcement_learning" type="policy.py" output="screen">
         <!-- Hyperparameters for the model -->

@@ -6,7 +6,6 @@ from geometry_msgs.msg import PoseStamped
 from reinforcement_learning.msg import Heuristic
 from std_msgs.msg import Float32, Bool, String
 import os
-from functools import partial
 
 class Reward:
     def __init__(self):
@@ -15,8 +14,7 @@ class Reward:
         rospy.Subscriber('/gazebo/model_poses/robot/notspot', PoseStamped, self.robot_pose_callback)
         rospy.Subscriber('/RL/heuristic/goal/closest', Heuristic, self.heuristic_callback)
         rospy.Subscriber('/RL/episode/new', Bool, self.new_episode_callback)
-
-        self.set_rewards()
+        rospy.Subscriber(f'/RL/states/reward', String, self.calc_reward)
 
         # rospy.Subscriber('/RL/reward/action', Float32, self.calc_reward)
         
@@ -69,18 +67,15 @@ class Reward:
     def not_moving_callback(self, msg):
         reward = -1
         self.publishers['action_reward'].publish(reward)
+            
 
-    def set_rewards(self):
+
+    def calc_reward(self, msg: String):
         self.rewards = {
             "hits_wall": -1,
             "reach_goal": 1,
             "not_moving": -1
         }
-        for state in self.rewards.keys():
-            rospy.Subscriber(f'/RL/states/{state}', String, self.calc_reward)
-
-
-    def calc_reward(self, msg: String):
         rospy.loginfo(msg.data)
         reward = self.rewards[msg.data]
         self.publishers['action_reward'].publish(reward)
