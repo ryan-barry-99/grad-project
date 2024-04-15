@@ -76,12 +76,12 @@ class Reward:
             "reach_goal": 1,
             "not_moving": -1
         }
-        rospy.loginfo(msg.data)
         reward = self.rewards[msg.data]
         self.publishers['action_reward'].publish(reward)
         self.total_reward.data += reward
         self.publishers['total_reward'].publish(self.total_reward)
-
+        if msg.data == "reach_goal" or msg.data == "stuck":
+            self.new_episode_pub.publish(True)
             
 
     def run(self):

@@ -61,7 +61,7 @@ class Policy:
         self.new_data = [False, False, False, False]
         num_goals = 5
         self.heuristic_tensor = torch.zeros(num_goals, 3)  # Initialize with zeros
-        # self.image_pub = rospy.Publisher("/occupancy_image", Image, queue_size=10)
+        self.image_pub = rospy.Publisher("/occupancy_image", Image, queue_size=10)
         self.bridge = CvBridge()
 
         self.velo_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
@@ -108,18 +108,18 @@ class Policy:
         self.new_data[1] = True
 
     def occupancy_grid_callback(self, occupancy_grid: OccupancyGrid):
-        # occupancy_grid_np = np.array(occupancy_grid.data).reshape((100, 100))
+        occupancy_grid_np = np.array(occupancy_grid.data).reshape((100, 100))
         
-        # # Map values: 100 to 0 (black) and -1 to 255 (white)
-        # # First, normalize -1 to 1, then invert (1 to 0, 0 to 1), finally scale to 255
-        # image_np = np.interp(occupancy_grid_np, [-1, 100], [1, 0])
-        # image_np = (image_np * 255).astype(np.uint8)
+        # Map values: 100 to 0 (black) and -1 to 255 (white)
+        # First, normalize -1 to 1, then invert (1 to 0, 0 to 1), finally scale to 255
+        image_np = np.interp(occupancy_grid_np, [-1, 100], [1, 0])
+        image_np = (image_np * 255).astype(np.uint8)
         
-        # # Convert numpy array to ROS Image message
-        # image_msg = self.bridge.cv2_to_imgmsg(image_np, encoding="mono8")
+        # Convert numpy array to ROS Image message
+        image_msg = self.bridge.cv2_to_imgmsg(image_np, encoding="mono8")
         
-        # # Publish the image
-        # self.image_pub.publish(image_msg)
+        # Publish the image
+        self.image_pub.publish(image_msg)
         grid = np.array(occupancy_grid.data).reshape((100,100))
 
         # Tensor of size ([100, 100])

@@ -5,6 +5,7 @@ import rospkg
 import os
 from datetime import datetime
 from std_msgs.msg import Bool, String
+from geometry_msgs.msg import Twist
 
 class RunsManager:
     def __init__(self):
@@ -18,6 +19,7 @@ class RunsManager:
 
         rospy.Subscriber('/RL/episode/new', Bool, self.new_episode_callback)
         self.reset_pub = rospy.Publisher('/robot_reset_command', String, queue_size=10)
+        self.velo_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         rospy.spin()
 
 
@@ -31,6 +33,8 @@ class RunsManager:
                     os.mkdir(f"{self.runs_folder}")
                     self.rewards_folder = f"{self.runs_folder}/rewards"
                     os.mkdir(self.rewards_folder)
+                    self.models_folder = f"{self.runs_folder}/models"
+                    os.mkdir(self.models_folder)
                     self.init_rewards_dir = True
                 else:
                     # List all folders in the directory
@@ -47,10 +51,12 @@ class RunsManager:
 
                 rospy.set_param('/RL/runs/runs_folder', self.runs_folder)
                 rospy.set_param('/RL/runs/rewards_folder', self.rewards_folder)
+                rospy.set_param('/RL/runs/models_folder', self.models_folder)
 
     def new_episode_callback(self, msg: Bool):
         if msg.data:
             self.reset_pub.publish("reset")
+            self.velo_pub.publish(Twist())
 
 
 
