@@ -63,6 +63,55 @@
     </collision>
   </link>
 
+  <!-- <gazebo reference="bump_sensor">
+    <sensor name="main_bumper" type="contact">
+      <selfCollide>true</selfCollide>
+      <alwaysOn>true</alwaysOn>
+      <updateRate>15.0</updateRate>
+      <material>
+        <ambient>0 0 0 0</ambient>
+        <diffuse>0 0 0 0</diffuse>
+        <specular>0 0 0 0</specular>
+        <emissive>0 0 0 0</emissive>
+        </material>
+      <contact>
+        <collision>maze_collision</collision>
+      </contact>
+      <max_contacts>50</max_contacts>
+      <plugin name="gazebo_ros_bumper_controller" filename="libgazebo_ros_bumper.so">
+        <bumperTopicName>contact_sensor</bumperTopicName>
+        <frameName>world</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <joint name="bumper_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="bump_sensor"/>
+  </joint>
+
+  <link name="bump_sensor">
+    <collision>
+      <origin xyz="0 0 -0.025" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.5 0.25 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.025 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.5 0.25 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="0" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+    </inertial>
+  </link> -->
+
   <!-- Include the RealSense camera URDF -->
   <xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro" />
 
@@ -71,6 +120,7 @@
 
   <!-- Define the joint connecting the camera to the robot -->
   <joint name="realsense_camera" type="fixed">
+
     <parent link="base_link"/>
     <child link="realsense_camera_link"/>
     <origin xyz="0.13 0 0" rpy="0 0 0"/> <!-- Adjust position as needed -->

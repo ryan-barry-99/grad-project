@@ -6,75 +6,77 @@ import torch.nn.functional as F
 import rospy
 
 
-class CNNBranch(nn.Module):
-    def __init__(self, in_channels, scaler, output_size):
-        super(CNNBranch, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, 16, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.fc = nn.Linear(int(scaler*64), output_size)  # Adjust output_size based on feature requirement
+
+class CNN_Branch(nn.Module):
+    def __init__(self, in_channels, dim1, dim2):
+        super(CNN_Branch, self).__init__()
+        self.dim1 = dim1
+        self.dim2 = dim2
+        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=16, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding=1)
+        self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.fc = nn.Linear(64 * (dim1 // 8) * (dim2 // 8), 16)  # Assuming 3 maxpool layers with kernel_size=2 and stride=2
 
     def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = self.pool(F.relu(self.conv3(x)))
-        # Flatten
-        x = x.reshape(x.size(0), -1)
-        x = F.relu(self.fc(x))
+        x = torch.relu(self.conv1(x))
+        x = self.pool(x)
+        x = torch.relu(self.conv2(x))
+        x = self.pool(x)
+        x = torch.relu(self.conv3(x))
+        x = self.pool(x)
+        x = x.view(1, 64 * (self.dim1 // 8) * (self.dim2 // 8))  # Flatten before fully connected layer
+        x = self.fc(x)
         return x
+    
+class DenseNetwork(nn.Module):
+    def __init__(self, input_size):
+        super(DenseNetwork, self).__init__()
+        # Define the layers of the dense network
+        self.fc1 = nn.Linear(input_size, 64)
+        self.fc2 = nn.Linear(64, 32)
+        self.fc3 = nn.Linear(32, 3)
+
+    def forward(self, rgb_out, depth_out, grid_out, heuristic, position, orientation, ang_vel, lin_acc):
+        # Concatenate the output tensors from the CNN branches with other tensors
+        x = torch.cat((rgb_out, depth_out, grid_out, heuristic, position, orientation, ang_vel, lin_acc), dim=1)
+        # Pass through dense layers
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+    
 
 class PolicyNetwork(nn.Module):
     def __init__(self):
         super(PolicyNetwork, self).__init__()
         # Initialize CNN branches with appropriate input channels
-        out_sz = 16
-        self.rgb_branch = CNNBranch(in_channels=3, scaler=4800, output_size=out_sz)  # RGB image
-        self.depth_branch = CNNBranch(in_channels=1, scaler=225, output_size=out_sz)  # Depth image
-        self.grid_branch = CNNBranch(in_channels=1, scaler=2.25, output_size=out_sz)  # Grid image
+        self.rgb_branch = CNN_Branch(in_channels=3, dim1=480, dim2=640)  # RGB image
+        self.depth_branch = CNN_Branch(in_channels=1, dim1=720, dim2=1280)  # Depth image
+        self.grid_branch = CNN_Branch(in_channels=1, dim1=100, dim2=100)  # Grid image
+        self.fusion_net = DenseNetwork(63)
         
-        # Dense network
-        num_goals = 5
-        self.fc1 = nn.Linear(out_sz * 3 + num_goals * 3, 128)
-        self.fc2 = nn.Linear(128, 64)
-        self.fc3 = nn.Linear(64, 3)  # Output layer with 3 outputs
 
 
-    def forward(self, rgb, depth, grid, heuristic):
-        # Assuming inputs are single instances, ensure they're correctly batched
-        # No need to unsqueeze if inputs already have a batch dimension
+    def forward(self, rgb, depth, grid, heuristic, position, orientation, ang_vel, lin_acc):
         rgb_out = self.rgb_branch(rgb)
-        depth_out = self.depth_branch(depth.unsqueeze(0))
-        grid_out = self.grid_branch(grid.unsqueeze(0))
-        
-        # Ensure 'heuristic' is correctly shaped: [1, num_goals * 3]
-        # Adjust as necessary to match your specific input shape requirements
-        heuristic_flattened = heuristic.view(1, -1)
-        rospy.loginfo(f"{rgb_out.size(), depth_out.size(), grid_out.size(), heuristic_flattened.size()}")
-        rospy.loginfo(f"{depth_out}")
-        # Concatenate outputs: Ensure dimensions align for concatenation
-        combined = torch.cat((rgb_out, depth_out, grid_out, heuristic_flattened), dim=1)
-        
-        # Dense network processing
-        x = F.relu(self.fc1(combined))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        rospy.loginfo(f"{x.size()}")
-        
-        return x
-    # def forward(self, rgb, depth, grid, heuristic):
-    #     # Process inputs through their respective branches
-    #     depth_out = self.depth_branch(depth.unsqueeze(0))
-    #     rgb_out = self.rgb_branch(rgb).expand_as(depth_out)
-    #     grid_out = self.grid_branch(grid.unsqueeze(0))
-    #     heuristic_flattened = heuristic.view(-1).unsqueeze(0).repeat(64, 1)
-        
-    #     # Concatenate outputs
-    #     combined = torch.cat((rgb_out, depth_out, grid_out, heuristic_flattened), dim=1)
-        
-    #     # Dense network
-    #     x = F.relu(self.fc1(combined))
-    #     x = F.relu(self.fc2(x))
-    #     x = self.fc3(x)
+        depth_out = self.depth_branch(depth)
+        grid_out = self.grid_branch(grid)
 
-    #     return x
+        x = self.fusion_net(rgb_out, depth_out, grid_out, heuristic, position, orientation, ang_vel, lin_acc)
+        return x
+
+
+if __name__ == "__main__":
+    model = PolicyNetwork()
+    # Assuming you have tensors for rgb, depth, and grid images
+    rgb = torch.randn(480, 640, 3).permute(2,0,1)  # batch_size x height x width x channels
+    depth = torch.randn(720, 1280).unsqueeze(0)  # batch_size x height x width
+    grid = torch.randn(100, 100).unsqueeze(0)  # batch_size x height x width
+    # Forward pass
+    rgb_out, depth_out, grid_out = model(rgb, depth, grid)
+    # Print the outputs
+    print("RGB output shape:", rgb_out.shape)
+    print("Depth output shape:", depth_out.shape)
+    print("Grid output shape:", grid_out.shape)
