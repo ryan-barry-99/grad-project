@@ -1,0 +1,6 @@
+hyperparameters:
+  load_model: False
+  model_path: None
+  optimizer: 'Adam'
+  lr: 0.001
+  learn: True

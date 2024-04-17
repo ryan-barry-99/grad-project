@@ -1,0 +1,3 @@
+float64 x_distance
+float64 y_distance
+float64 manhattan_distance

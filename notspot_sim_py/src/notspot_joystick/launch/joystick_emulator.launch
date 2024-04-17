@@ -1,0 +1,7 @@
+<launch>
+
+    <!-- Joystick Emulator node -->
+    <node pkg="notspot_joystick" type="JoystickEmulator.py"
+        name="JOYSTICK_EMULATOR" output="screen"/>
+
+</launch>
