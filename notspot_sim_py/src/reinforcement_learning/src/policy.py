@@ -71,47 +71,62 @@ class Policy:
         self.gait_pub.publish(self.gait)
         self.steps_since_update += 1
         if self.ai_controls:
-            # try:
-            # if self.steps_since_update >= TRAJECTORY_LENGTH and not self.new_episode:
-            #     self.update_policy(TRAJECTORY_LENGTH)
+            try:
+                # if self.steps_since_update >= TRAJECTORY_LENGTH and not self.new_episode:
+                #     self.update_policy(TRAJECTORY_LENGTH)
 
-            self.model.eval() # Set model to evaluation mode
+                self.model.eval() # Set model to evaluation mode
 
-            rgb = self.rgb_tensor.to(self.device)                # 480, 640, 3
-            depth = self.depth_tensor.to(self.device)            # 720, 1280
-            occupancy_grid = self.occupancy_grid.to(self.device) # 100, 100
-            heuristic = self.heuristic_tensor.to(self.device)    # 1, 3
-            position = self.position_tensor.to(self.device)      # 1, 2
-            orientation = self.orientation_tensor.to(self.device)# 1, 4
-            ang_vel = self.ang_vel_tensor.to(self.device)        # 1, 3
-            lin_acc = self.lin_acc_tensor.to(self.device)        # 1, 3
+                rgb = self.rgb_tensor.to(self.device)                # 480, 640, 3
+                depth = self.depth_tensor.to(self.device)            # 720, 1280
+                occupancy_grid = self.occupancy_grid.to(self.device) # 100, 100
+                heuristic = self.heuristic_tensor.to(self.device)    # 1, 3
+                position = self.position_tensor.to(self.device)      # 1, 2
+                orientation = self.orientation_tensor.to(self.device)# 1, 4
+                ang_vel = self.ang_vel_tensor.to(self.device)        # 1, 3
+                lin_acc = self.lin_acc_tensor.to(self.device)        # 1, 3
 
-            with torch.no_grad():
-                mean, std = self.model(rgb, depth, occupancy_grid, heuristic, position, orientation, ang_vel, lin_acc)
-                # mean = mean.to('cpu').squeeze().tolist()
-                # std = std.to('cpu').squeeze().tolist()
-            rospy.loginfo(f"Mean: {mean}, Std: {std}")
-            velocity_vector, _ = self.sample_velocity(mean, std)
-            velocity_vector = velocity_vector.to('cpu').squeeze().tolist()
-            rospy.loginfo(f"Velocity vector: {velocity_vector}")
-            velo = Twist()
-            if not self.new_episode:
-                velo.linear.x = velocity_vector[0]
-                velo.linear.y = velocity_vector[1]
-                velo.angular.z = velocity_vector[2]
-            else:
-                if self.steps_since_update > 25:
-                    self.new_episode = False
-            self.velo_pub.publish(velo)
-            rospy.loginfo(f"Predicted velocity: {velo}")
-            # except:
-            #     pass
+                with torch.no_grad():
+                    mean, std = self.model(rgb, depth, occupancy_grid, heuristic, position, orientation, ang_vel, lin_acc)
+                velocity_vector, _ = self.sample_velocity(mean, std)
+                velocity_vector = velocity_vector.to('cpu').squeeze().tolist()
+                velo = Twist()
+                if not self.new_episode:
+                    velo.linear.x = velocity_vector[0]
+                    velo.linear.y = velocity_vector[1]
+                    velo.angular.z = velocity_vector[2]
+                else:
+                    if self.steps_since_update > 25:
+                        self.new_episode = False
+                self.velo_pub.publish(velo)
+            except:
+                pass
 
     def sample_velocity(self, mean, std):
         dist = torch.distributions.Normal(mean, std)
         velocity_vector = dist.sample()
         log_probs = dist.log_prob(velocity_vector).sum(axis=-1)  # Sum log probs for total log prob of the velocity vector
         return velocity_vector, log_probs
+    
+    def ppo_update(self, optimizer, policy_network, actions, old_log_probs, advantages, eps_clip=0.2):
+        # Assuming 'actions', 'old_log_probs', and 'advantages' are collected during the episode
+        
+        # Get new log probabilities and state values for the actions taken
+        mean, std = policy_network(states)
+        _, new_log_probs = self.sample_velocity(mean, std)
+        
+        # Calculate the ratio of new to old probabilities
+        ratios = (new_log_probs - old_log_probs).exp()
+        
+        # Calculate the clipped objective function
+        surr1 = ratios * advantages
+        surr2 = torch.clamp(ratios, 1-eps_clip, 1+eps_clip) * advantages
+        loss = -torch.min(surr1, surr2).mean()  # PPO's objective is to maximize the clipped objective, hence the negative sign for minimization
+        
+        # Perform backpropagation and optimization step
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
     # def update_policy(self, steps):
     #     average_rewards = self.rewards_since_update / steps
         
