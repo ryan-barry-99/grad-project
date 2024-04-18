@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.distributions import Normal
 
 class CNN_Branch(nn.Module):
     def __init__(self, in_channels, dim1, dim2):
@@ -42,6 +43,8 @@ class DenseNetwork(nn.Module):
         return x
 
     
+LOG_SIG_MIN = -2
+LOG_SIG_MAX = 2
 
 class PolicyNetwork(nn.Module):
     def __init__(self):
@@ -51,6 +54,9 @@ class PolicyNetwork(nn.Module):
         self.depth_branch = CNN_Branch(in_channels=1, dim1=720, dim2=1280)  # Depth image
         self.grid_branch = CNN_Branch(in_channels=1, dim1=100, dim2=100)  # Grid image
         self.fusion_net = DenseNetwork(63)
+
+        self.fc_final_mean = nn.Linear(3, 3)
+        self.fc_final_log_std = nn.Linear(3, 3)
         
 
 
@@ -60,4 +66,10 @@ class PolicyNetwork(nn.Module):
         grid_out = self.grid_branch(grid)
 
         x = self.fusion_net(rgb_out, depth_out, grid_out, heuristic, position, orientation, ang_vel, lin_acc)
-        return x
+
+        mean = self.fc_final_mean(x)
+        log_std = self.fc_final_log_std(x)
+        log_std = torch.clamp(log_std, min=LOG_SIG_MIN, max=LOG_SIG_MAX)
+        std = log_std.exp()
+
+        return mean, std

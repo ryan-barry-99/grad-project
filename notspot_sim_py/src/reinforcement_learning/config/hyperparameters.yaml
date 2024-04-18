@@ -2,5 +2,6 @@ hyperparameters:
   load_model: False
   model_path: None
   optimizer: 'Adam'
-  lr: 0.001
+  lr: 0.0025
+  gamma: 0.99
   learn: True

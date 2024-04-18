@@ -12,6 +12,7 @@ class Reward:
         rospy.init_node('reward_node', anonymous=True)
                 
         self.new_episode_pub = rospy.Publisher('/RL/episode/new', Bool, queue_size=10)
+        self.save_model_pub = rospy.Publisher('/RL/model/save', String, queue_size=10)
         self.robot_pose_stamped = PoseStamped()
         self.publishers = {
             'action_reward': rospy.Publisher('/RL/reward/action', Float32, queue_size=10),
@@ -42,6 +43,8 @@ class Reward:
         if self.new_episode:
             with open(f'{self.rewards_folder}/episode_{self.episode_num}.txt', 'w') as f:
                 f.write(str(self.total_reward.data))
+            if self.episode_num % 10 == 0:
+                self.save_model_pub.publish(f"episode_{self.episode_num}.pt")
             self.episode_num += 1
             self.total_reward = Float32()
             self.new_episode_pub.publish(False)

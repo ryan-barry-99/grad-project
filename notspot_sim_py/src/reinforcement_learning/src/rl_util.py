@@ -45,3 +45,10 @@ def set_optimizer(model, hyperparameters):
     else:
         raise ValueError(f'Unsupported optimizer: {optimizer_name}')
     return optimizer
+
+
+def save_model(model, path):
+    try:
+        torch.save(model.state_dict(), path)
+    except:
+        pass

@@ -59,7 +59,7 @@ class RobotSpawner:
             set_state_msg.model_name = self.robot_name
             set_state_msg.pose = self.pose
             self.set_state_service(set_state_msg)
-            rospy.loginfo("Robot pose set successfully")
+            # rospy.loginfo("Robot pose set successfully")
         except rospy.ServiceException as e:
             rospy.logerr("Set Model State service call failed: %s", e)
 

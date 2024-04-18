@@ -46,7 +46,8 @@ class RunsManager:
                     # Select the most recent folder (the last one after sorting)
                     if folders:
                         self.runs_folder = self.rospack.get_path('reinforcement_learning') + '/runs/' + folders[-1]
-                    self.rewards_folder = self.rewards_folder + '/rewards/'
+                    self.rewards_folder = self.runs_folder + '/rewards/'
+                    self.models_folder = self.runs_folder + '/models/'
                     self.init_rewards_dir = True
 
                 rospy.set_param('/RL/runs/runs_folder', self.runs_folder)
@@ -55,8 +56,8 @@ class RunsManager:
 
     def new_episode_callback(self, msg: Bool):
         if msg.data:
-            self.reset_pub.publish("reset")
             self.velo_pub.publish(Twist())
+            self.reset_pub.publish("reset")
 
 
 

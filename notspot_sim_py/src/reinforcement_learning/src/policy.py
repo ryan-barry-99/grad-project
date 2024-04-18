@@ -30,10 +30,9 @@ class Policy:
         else:
             rospy.set_param('/RL/runs/new_run', False)
             self.model.load_state_dict(torch.load(self.hyperparameters['model_path']))
-        self.optim = set_optimizer(self.model, self.hyperparameters)
+        self.optimizer = set_optimizer(self.model, self.hyperparameters)
         self.model.to(self.device)
 
-        self.heuristic_tensor = torch.zeros(num_goals, 3)  # Initialize with zeros
         self.image_pub = rospy.Publisher("/occupancy_image", Image, queue_size=10)
         self.bridge = CvBridge()
 
@@ -41,10 +40,17 @@ class Policy:
 
         self.gait_pub = rospy.Publisher("/gait", String, queue_size=20)
         self.gait = "trot"
-        self.ai_controls = False
+        self.ai_controls = True
 
         self.rewards_since_update = 0
         self.steps_since_update = 0
+        self.new_episode = True
+        self.models_folder = False
+
+        num_goals = 1
+        for i in range(num_goals):
+            rospy.Subscriber(f'heuristic/goal/{i}', Heuristic, partial(self.heuristic_callback, goal=i))
+        self.heuristic_tensor = torch.zeros(num_goals, 3)  # Initialize with zeros
 
         rospy.Subscriber('/realsense/color/image_raw', Image, self.rgb_image_callback)
         rospy.Subscriber('/realsense/depth/image_raw', Image, self.depth_image_callback)
@@ -54,10 +60,9 @@ class Policy:
         rospy.Subscriber('/AI_Control', Bool, self.control_type_callback)
         rospy.Subscriber('/RL/step', Bool, self.predict_velocity)
         rospy.Subscriber('/RL/reward/action', Float32, self.update_reward)
+        rospy.Subscriber('/RL/episode/new', Bool, self.new_episode_callback)
+        rospy.Subscriber('/RL/model/save', String, self.save_model_callback)
 
-        num_goals = 1
-        for i in range(num_goals):
-            rospy.Subscriber(f'heuristic/goal/{i}', Heuristic, partial(self.heuristic_callback, goal=i))
 
         rospy.spin()
 
@@ -66,35 +71,101 @@ class Policy:
         self.gait_pub.publish(self.gait)
         self.steps_since_update += 1
         if self.ai_controls:
-            try:
-                if self.steps_since_update == TRAJECTORY_LENGTH:
-                    self.update_policy()
+            # try:
+            # if self.steps_since_update >= TRAJECTORY_LENGTH and not self.new_episode:
+            #     self.update_policy(TRAJECTORY_LENGTH)
 
-                self.model.eval() # Set model to evaluation mode
+            self.model.eval() # Set model to evaluation mode
 
-                rgb = self.rgb_tensor.to(self.device)                # 480, 640, 3
-                depth = self.depth_tensor.to(self.device)            # 720, 1280
-                occupancy_grid = self.occupancy_grid.to(self.device) # 100, 100
-                heuristic = self.heuristic_tensor.to(self.device)    # 1, 3
-                position = self.position_tensor.to(self.device)      # 1, 2
-                orientation = self.orientation_tensor.to(self.device)# 1, 4
-                ang_vel = self.ang_vel_tensor.to(self.device)        # 1, 3
-                lin_acc = self.lin_acc_tensor.to(self.device)        # 1, 3
+            rgb = self.rgb_tensor.to(self.device)                # 480, 640, 3
+            depth = self.depth_tensor.to(self.device)            # 720, 1280
+            occupancy_grid = self.occupancy_grid.to(self.device) # 100, 100
+            heuristic = self.heuristic_tensor.to(self.device)    # 1, 3
+            position = self.position_tensor.to(self.device)      # 1, 2
+            orientation = self.orientation_tensor.to(self.device)# 1, 4
+            ang_vel = self.ang_vel_tensor.to(self.device)        # 1, 3
+            lin_acc = self.lin_acc_tensor.to(self.device)        # 1, 3
 
-                with torch.no_grad():
-                    pred = self.model(rgb, depth, occupancy_grid, heuristic, position, orientation, ang_vel, lin_acc).to('cpu').squeeze().tolist()
-                velo = Twist()
-                velo.linear.x = pred[0]
-                velo.linear.y = pred[1]
-                velo.angular.z = pred[2]
-                self.velo_pub.publish(velo)
-            except:
-                pass
+            with torch.no_grad():
+                mean, std = self.model(rgb, depth, occupancy_grid, heuristic, position, orientation, ang_vel, lin_acc)
+                # mean = mean.to('cpu').squeeze().tolist()
+                # std = std.to('cpu').squeeze().tolist()
+            rospy.loginfo(f"Mean: {mean}, Std: {std}")
+            velocity_vector, _ = self.sample_velocity(mean, std)
+            velocity_vector = velocity_vector.to('cpu').squeeze().tolist()
+            rospy.loginfo(f"Velocity vector: {velocity_vector}")
+            velo = Twist()
+            if not self.new_episode:
+                velo.linear.x = velocity_vector[0]
+                velo.linear.y = velocity_vector[1]
+                velo.angular.z = velocity_vector[2]
+            else:
+                if self.steps_since_update > 25:
+                    self.new_episode = False
+            self.velo_pub.publish(velo)
+            rospy.loginfo(f"Predicted velocity: {velo}")
+            # except:
+            #     pass
 
-    def update_policy(self):
-        self.steps_since_update = 0
-        average_rewards = self.rewards_since_update/TRAJECTORY_LENGTH
-        self.rewards_since_update = 0
+    def sample_velocity(self, mean, std):
+        dist = torch.distributions.Normal(mean, std)
+        velocity_vector = dist.sample()
+        log_probs = dist.log_prob(velocity_vector).sum(axis=-1)  # Sum log probs for total log prob of the velocity vector
+        return velocity_vector, log_probs
+    # def update_policy(self, steps):
+    #     average_rewards = self.rewards_since_update / steps
+        
+    #     # Compute gradients
+    #     self.optimizer.zero_grad()
+    #     # Convert average_rewards to a tensor
+    #     average_rewards_tensor = torch.tensor(average_rewards, dtype=torch.float32, requires_grad=True)
+
+    #     # Compute the loss (negative because we're maximizing)
+    #     loss = -average_rewards_tensor
+
+    #     # Zero gradients, perform backward pass, and update policy parameters
+    #     self.optimizer.zero_grad()
+    #     loss.backward()
+    #     self.optimizer.step()
+
+    #     # Reset rewards accumulator
+    #     self.rewards_since_update = 0
+    #     self.steps_since_update = 0
+
+    # def update_policy(self, steps):
+    #     # Assuming you have stored log probabilities and rewards for each step
+    #     # Convert lists to PyTorch tensors
+    #     log_probs = torch.stack(self.log_probs)
+    #     rewards = torch.tensor(self.rewards_since_update, dtype=torch.float32)
+        
+    #     # Compute discounted rewards
+    #     discounted_rewards = []
+    #     R = 0
+    #     for r in rewards.flip(dims=(0,)):
+    #         R = r + self.hyperparameters['gamma'] * R
+    #         discounted_rewards.insert(0, R)
+    #     discounted_rewards = torch.tensor(discounted_rewards)
+        
+    #     # Normalize rewards
+    #     rewards_normalized = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-5)
+        
+    #     # Compute the ratio of new to old policy probabilities
+    #     ratios = torch.exp(log_probs - log_probs.detach())
+        
+    #     # Compute clipped objective
+    #     advantages = rewards_normalized.detach()
+    #     surr1 = ratios * advantages
+    #     surr2 = torch.clamp(ratios, 1 - self.hyperparameters['epsilon'], 1 + self.hyperparameters['epsilon']) * advantages
+    #     loss = -torch.min(surr1, surr2).mean()
+        
+    #     # Perform backpropagation and optimization step
+    #     self.optimizer.zero_grad()
+    #     loss.backward()
+    #     self.optimizer.step()
+        
+    #     # Clear the stored log probabilities and rewards
+    #     self.log_probs = []
+    #     self.rewards_since_update = []
 
     def rgb_image_callback(self, img: Image):
         # Tensor of size ([480, 640, 3])
@@ -147,6 +218,21 @@ class Policy:
     
     def update_reward(self, msg):
         self.rewards_since_update += msg.data
+
+    def new_episode_callback(self, msg):
+        steps = self.steps_since_update
+        # if steps > 0:
+        #     self.update_policy(steps)
+        self.velo_pub.publish(Twist())
+        self.new_episode = True
+        if not self.models_folder:
+            if rospy.has_param('/RL/runs/models_folder'):
+                self.models_folder = rospy.get_param('/RL/runs/models_folder')
+        else:
+            save_model(self.model, f"{self.models_folder}/latest.pt")
+
+    def save_model_callback(self, msg):
+        save_model(self.model, f"{self.models_folder}/{msg.data}")
 
 
 if __name__ == '__main__':
