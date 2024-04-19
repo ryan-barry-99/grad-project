@@ -15,6 +15,7 @@ from functools import partial
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Imu
 from rl_util import *
+from experience_buffer import ExperienceDataset
 
 TRAJECTORY_LENGTH = 20
 
@@ -108,25 +109,25 @@ class Policy:
         log_probs = dist.log_prob(velocity_vector).sum(axis=-1)  # Sum log probs for total log prob of the velocity vector
         return velocity_vector, log_probs
     
-    def ppo_update(self, optimizer, policy_network, actions, old_log_probs, advantages, eps_clip=0.2):
-        # Assuming 'actions', 'old_log_probs', and 'advantages' are collected during the episode
+    # def ppo_update(self, optimizer, policy_network, actions, old_log_probs, advantages, eps_clip=0.2):
+    #     # Assuming 'actions', 'old_log_probs', and 'advantages' are collected during the episode
         
-        # Get new log probabilities and state values for the actions taken
-        mean, std = policy_network(states)
-        _, new_log_probs = self.sample_velocity(mean, std)
+    #     # Get new log probabilities and state values for the actions taken
+    #     mean, std = policy_network(states)
+    #     _, new_log_probs = self.sample_velocity(mean, std)
         
-        # Calculate the ratio of new to old probabilities
-        ratios = (new_log_probs - old_log_probs).exp()
+    #     # Calculate the ratio of new to old probabilities
+    #     ratios = (new_log_probs - old_log_probs).exp()
         
-        # Calculate the clipped objective function
-        surr1 = ratios * advantages
-        surr2 = torch.clamp(ratios, 1-eps_clip, 1+eps_clip) * advantages
-        loss = -torch.min(surr1, surr2).mean()  # PPO's objective is to maximize the clipped objective, hence the negative sign for minimization
+    #     # Calculate the clipped objective function
+    #     surr1 = ratios * advantages
+    #     surr2 = torch.clamp(ratios, 1-eps_clip, 1+eps_clip) * advantages
+    #     loss = -torch.min(surr1, surr2).mean()  # PPO's objective is to maximize the clipped objective, hence the negative sign for minimization
         
-        # Perform backpropagation and optimization step
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+    #     # Perform backpropagation and optimization step
+    #     optimizer.zero_grad()
+    #     loss.backward()
+    #     optimizer.step()
     # def update_policy(self, steps):
     #     average_rewards = self.rewards_since_update / steps
         
