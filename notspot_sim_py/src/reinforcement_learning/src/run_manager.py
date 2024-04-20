@@ -35,6 +35,10 @@ class RunsManager:
                     os.mkdir(self.rewards_folder)
                     self.models_folder = f"{self.runs_folder}/models"
                     os.mkdir(self.models_folder)
+                    self.steps_folder = f"{self.runs_folder}/steps"
+                    os.mkdir(self.steps_folder)
+                    self.goal_folder = f"{self.runs_folder}/goal"
+                    os.mkdir(self.goal_folder)
                     self.init_rewards_dir = True
                 else:
                     # List all folders in the directory
@@ -48,11 +52,15 @@ class RunsManager:
                         self.runs_folder = self.rospack.get_path('reinforcement_learning') + '/runs/' + folders[-1]
                     self.rewards_folder = self.runs_folder + '/rewards/'
                     self.models_folder = self.runs_folder + '/models/'
+                    self.steps_folder = self.runs_folder + '/steps/'
+                    self.goal_folder = self.runs_folder + '/goal/'
                     self.init_rewards_dir = True
 
                 rospy.set_param('/RL/runs/runs_folder', self.runs_folder)
                 rospy.set_param('/RL/runs/rewards_folder', self.rewards_folder)
                 rospy.set_param('/RL/runs/models_folder', self.models_folder)
+                rospy.set_param('/RL/runs/steps_folder', self.steps_folder)
+                rospy.set_param('/RL/runs/goals_folder', self.goal_folder)
 
     def new_episode_callback(self, msg: Bool):
         if msg.data:
