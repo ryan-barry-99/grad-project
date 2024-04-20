@@ -33,9 +33,9 @@ class DenseNetwork(nn.Module):
         self.fc2 = nn.Linear(64, 32)
         self.fc3 = nn.Linear(32, 3)
 
-    def forward(self, rgb_out, depth_out, grid_out, heuristic, position, orientation, ang_vel, lin_acc):
+    def forward(self, fused_observation: tuple):
         # Concatenate the output tensors from the CNN branches with other tensors
-        x = torch.cat((rgb_out, depth_out, grid_out, heuristic, position, orientation, ang_vel, lin_acc), dim=1)
+        x = torch.cat(fused_observation, dim=1)
         # Pass through dense layers
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
@@ -66,7 +66,7 @@ class PolicyNetwork(nn.Module):
         depth_out = self.depth_branch(state["depth"])
         grid_out = self.grid_branch(state["occupancy_grid"])
 
-        x = self.fusion_net(
+        x = self.fusion_net((
             rgb_out, 
             depth_out, 
             grid_out, 
@@ -75,7 +75,7 @@ class PolicyNetwork(nn.Module):
             state["orientation"],
             state["ang_vel"],
             state["lin_acc"]
-            )
+            ))
 
         mean = self.fc_final_mean(x)
         log_std = self.fc_final_log_std(x)
@@ -93,18 +93,18 @@ class ValueNetwork(nn.Module):
         self.rgb_branch = CNN_Branch(in_channels=3, dim1=480, dim2=640)  # RGB image
         self.depth_branch = CNN_Branch(in_channels=1, dim1=720, dim2=1280)  # Depth image
         self.grid_branch = CNN_Branch(in_channels=1, dim1=100, dim2=100)  # Grid image
-        self.fusion_net = DenseNetwork(63)
+        self.fusion_net = DenseNetwork(66)
 
         self.fc_final_value = nn.Linear(3, 1)  # Output a single value for state value
 
-    def forward(self, state):
+    def forward(self, state, action):
         # Forward pass through CNN branches
         rgb_out = self.rgb_branch(state["rgb"])
         depth_out = self.depth_branch(state["depth"])
         grid_out = self.grid_branch(state["occupancy_grid"])
 
         # Forward pass through fusion network
-        x = self.fusion_net(
+        x = self.fusion_net((
             rgb_out,
             depth_out,
             grid_out,
@@ -112,8 +112,9 @@ class ValueNetwork(nn.Module):
             state["position"],
             state["orientation"],
             state["ang_vel"],
-            state["lin_acc"]
-        )
+            state["lin_acc"],
+            action
+        ))
 
         # Output the state value
         value = self.fc_final_value(x)

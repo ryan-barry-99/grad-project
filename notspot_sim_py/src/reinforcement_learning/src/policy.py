@@ -16,6 +16,7 @@ from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Imu
 from rl_util import *
 from experience_buffer import ExperienceBuffer
+import torch.nn.functional as F
 
 
 class ProximalPolicyOptimization:
@@ -98,28 +99,49 @@ class ProximalPolicyOptimization:
     def step_callback(self, msg: Bool):
         if msg.data:
             try:
-                self.experiences = {
-                        "rgb": self.rgb_tensor.to(self.device),                # 480, 640, 3
-                        "depth":self.depth_tensor.to(self.device),             # 720, 1280
-                        "occupancy_grid": self.occupancy_grid.to(self.device), # 100, 100
-                        "heuristic": self.heuristic_tensor.to(self.device),    # 1, 3
-                        "position": self.position_tensor.to(self.device),      # 1, 2
-                        "orientation": self.orientation_tensor.to(self.device),# 1, 4
-                        "ang_vel": self.ang_vel_tensor.to(self.device),        # 1, 3
-                        "lin_acc": self.lin_acc_tensor.to(self.device),        # 1, 3
-                    }
-                
-                mean, std = self.policy(self.experiences)
-                value = self.value(self.experiences)
-                velocity_vector, self.log_probs = self.sample_velocity(mean, std)
-                self.buffer.store(state=self.experiences, action={mean, std}, reward=self.rewards, log_prob = self.log_probs, value=value)
-                
-                velocity_vector = velocity_vector.to('cpu').squeeze().tolist()
-                self.publish_velocity(velocity_vector)
+                if self.new_episode:
+                    self.steps_since_update = 0
+                    self.new_episode = False
+                    if self.buffer.length >= self.hyperparameters["batch_size"]:
+                        self.update_networks()
+                        self.buffer.clear()
+                        if not self.models_folder:
+                            if rospy.has_param('/RL/runs/models_folder'):
+                                self.models_folder = rospy.get_param('/RL/runs/models_folder')
+                                rospy.loginfo("saving models....")
+                                save_model(self.policy_network, f"{self.models_folder}/latest_policy.pt")
+                                save_model(self.value_network, f"{self.models_folder}/latest_value.pt")
+                        else:
+                            rospy.loginfo("saving models....2")
+                            save_model(self.policy_network, f"{self.models_folder}/latest_policy.pt")
+                            save_model(self.value_network, f"{self.models_folder}/latest_value.pt")
+                self.steps_since_update += 1
+                if self.steps_since_update >= 25:  
+                    self.experiences = {
+                            "rgb": self.rgb_tensor.to(self.device),                # 480, 640, 3
+                            "depth":self.depth_tensor.to(self.device),             # 720, 1280
+                            "occupancy_grid": self.occupancy_grid.to(self.device), # 100, 100
+                            "heuristic": self.heuristic_tensor.to(self.device),    # 1, 3
+                            "position": self.position_tensor.to(self.device),      # 1, 2
+                            "orientation": self.orientation_tensor.to(self.device),# 1, 4
+                            "ang_vel": self.ang_vel_tensor.to(self.device),        # 1, 3
+                            "lin_acc": self.lin_acc_tensor.to(self.device),        # 1, 3
+                        }
+                    
+                    mean, std = self.policy(self.experiences)
+                    velocity_vector, self.log_probs = self.sample_velocity(mean, std)
+                    value = self.value(self.experiences, velocity_vector)
+                    self.buffer.store(state=self.experiences, action=velocity_vector, reward=self.rewards, log_prob = self.log_probs, value=value)
+                    
+                    
+                    velocity_vector = velocity_vector.to('cpu').squeeze().tolist()
+                    self.publish_velocity(velocity_vector)
 
-                if self.buffer.at_capacity():
-                    self.update_networks()
-                    self.buffer.clear()
+                    if self.buffer.at_capacity():
+                        self.update_networks()
+                        self.buffer.clear()
+                else:
+                    self.publish_velocity([0,0,0])
             except:
                 pass
 
@@ -137,13 +159,13 @@ class ProximalPolicyOptimization:
             mean, std = self.policy_network(experience)
         return mean, std
     
-    def value(self, experience):
+    def value(self, experience, action):
         """
-        Use the value network to estimate the value of a state
+        Use the value network to estimate the value of a state, action pair
         """
         self.value_network.eval()
         with torch.no_grad():
-            value = self.value_network(experience)
+            value = self.value_network(experience, action)
         return value
     
     def publish_velocity(self, velocity_vector):
@@ -154,7 +176,7 @@ class ProximalPolicyOptimization:
             velo.linear.y = velocity_vector[1]
             velo.angular.z = velocity_vector[2]
         else:
-            if self.steps_since_update > 25:
+            if len(self.buffer.states) > 25:
                 self.new_episode = False
         self.velo_pub.publish(velo)
         
@@ -179,11 +201,49 @@ class ProximalPolicyOptimization:
         return np.array(rewards) - np.array(values)
     
     def update_networks(self):
-        states, actions, rewards, log_probs, values = self.buffer.get_batch()
+        _, _, rewards, old_log_probs, new_log_probs, values = self.buffer.get_batch()
         advantages = self.advantage(rewards=rewards, values=values)
-
         
+        policy_loss = self.compute_policy_loss(old_log_probs=old_log_probs, new_log_probs=new_log_probs, advantages=advantages)
+        value_loss = self.compute_value_loss(values=values, rewards=rewards)
+
+        # Backpropagation and optimization for policy network
+        self.policy_optimizer.zero_grad()
+        policy_loss.backward()
+        self.policy_optimizer.step()
+
+        # Backpropagation and optimization for value network
+        self.value_optimizer.zero_grad()
+        value_loss.backward()
+        self.value_optimizer.step()
+
+
+    def compute_policy_loss(self, old_log_probs, new_log_probs, advantages):
+        clip_epsilon = self.hyperparameters["ppo_clip"]
+
+        ratio = torch.exp(new_log_probs / old_log_probs)
+        surr1 = ratio * advantages
+        surr2 = torch.clamp(ratio, 1.0 - clip_epsilon, 1.0 + clip_epsilon) * advantages
+
+        policy_loss = -torch.min(surr1, surr2).mean()
+
+        # Add entropy regularization term
+        entropy = -(new_log_probs.exp() * new_log_probs).sum(dim=1).mean()  # Compute entropy of the action distribution
+        policy_loss -= self.hyperparameters["entropy_coef"] * entropy  # Add entropy regularization to the policy loss
+        return policy_loss
     
+    def compute_value_loss(self, values, rewards):
+        discounted_rewards = []
+        running_reward = 0
+        for reward in reversed(rewards):
+            running_reward = reward + self.hyperparameters["gamma"] * running_reward
+            discounted_rewards.insert(0, running_reward)
+
+        values = torch.tensor(values)
+        discounted_rewards = torch.tensor(discounted_rewards)
+        value_loss = F.mse_loss(values, discounted_rewards)
+        return value_loss
+
 
     def rgb_image_callback(self, img: Image):
         # Tensor of size ([480, 640, 3])
@@ -237,17 +297,9 @@ class ProximalPolicyOptimization:
         self.rewards += msg.data
 
     def new_episode_callback(self, msg):
-        steps = self.steps_since_update
-        # if steps > 0:
-        #     self.update_policy(steps)
         self.velo_pub.publish(Twist())
         self.new_episode = True
-        if not self.models_folder:
-            if rospy.has_param('/RL/runs/models_folder'):
-                self.models_folder = rospy.get_param('/RL/runs/models_folder')
-        else:
-            save_model(self.policy_network, f"{self.models_folder}/latest_policy.pt")
-            save_model(self.value_network, f"{self.models_folder}/latest_value.pt")
+        
 
     def save_model_callback(self, msg: String):
         save_model(self.policy_network, f"{self.models_folder}/policy_{msg.data}")
