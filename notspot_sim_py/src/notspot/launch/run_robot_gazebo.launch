@@ -1,5 +1,4 @@
 <launch>
-
     <!-- Gazebo Simulation -->
     <include file="$(find notspot_gazebo)/launch/simulation.launch" />
 
@@ -13,5 +12,4 @@
     <node pkg="robot_state_publisher" type="robot_state_publisher"  name="realsense_camera">
       <param name="publish_frequency" type="double" value="30.0" />
     </node>
-
 </launch>

@@ -10,19 +10,19 @@ import torch
 from reinforcement_learning.msg import Heuristic
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String, Bool, Float32
-from policy_network import PolicyNetwork
+from navigation_networks import PolicyNetwork, ValueNetwork
 from functools import partial
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Imu
 from rl_util import *
-from experience_buffer import ExperienceDataset
+from experience_buffer import ExperienceBuffer
 
-TRAJECTORY_LENGTH = 20
 
-class Policy:
+class ProximalPolicyOptimization:
     def __init__(self):
         rospy.init_node('policy_node', anonymous=True)
-        self.model = PolicyNetwork()
+        self.policy = PolicyNetwork()
+        self.value = ValueNetwork()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # Load hyperparameters from YAML file
         self.hyperparameters = rospy.get_param('/policy_network/hyperparameters', default={})
@@ -30,9 +30,12 @@ class Policy:
             rospy.set_param('/RL/runs/new_run', True)
         else:
             rospy.set_param('/RL/runs/new_run', False)
-            self.model.load_state_dict(torch.load(self.hyperparameters['model_path']))
-        self.optimizer = set_optimizer(self.model, self.hyperparameters)
-        self.model.to(self.device)
+            self.policy.load_state_dict(torch.load(self.hyperparameters['policy_model_path']))
+            self.value.load_state_dict(torch.load(self.hyperparameters['value_model_path']))
+        self.policy_optimizer = set_optimizer(self.policy, self.hyperparameters)
+        self.policy.to(self.device)
+        self.value_optimizer = set_optimizer(self.value, self.hyperparameters)
+        self.value.to(self.device)
 
         self.image_pub = rospy.Publisher("/occupancy_image", Image, queue_size=10)
         self.bridge = CvBridge()
@@ -43,10 +46,16 @@ class Policy:
         self.gait = "trot"
         self.ai_controls = True
 
-        self.rewards_since_update = 0
-        self.steps_since_update = 0
+        self.rewards = 0
+        # self.steps_since_update = 0
         self.new_episode = True
         self.models_folder = False
+
+        self.experiences = {}
+        self.buffer = ExperienceBuffer(
+            batch_size=self.hyperparameters["batch_size"],
+            max_trajectory_length=self.hyperparameters["max_trajectory_length"]
+            )
 
         num_goals = 1
         for i in range(num_goals):
@@ -59,7 +68,7 @@ class Policy:
         rospy.Subscriber('/gazebo/model_poses/robot/notspot', PoseStamped, self.pose_callback)
         rospy.Subscriber('/notspot_imu/base_link_orientation', Imu, self.imu_callback)
         rospy.Subscriber('/AI_Control', Bool, self.control_type_callback)
-        rospy.Subscriber('/RL/step', Bool, self.predict_velocity)
+        rospy.Subscriber('/RL/step', Bool, self.step_callback)
         rospy.Subscriber('/RL/reward/action', Float32, self.update_reward)
         rospy.Subscriber('/RL/episode/new', Bool, self.new_episode_callback)
         rospy.Subscriber('/RL/model/save', String, self.save_model_callback)
@@ -67,41 +76,56 @@ class Policy:
 
         rospy.spin()
 
-
-    def predict_velocity(self, msg):
-        self.gait_pub.publish(self.gait)
-        self.steps_since_update += 1
-        if self.ai_controls:
+    def step_callback(self, msg: Bool):
+        if msg.data:
             try:
-                # if self.steps_since_update >= TRAJECTORY_LENGTH and not self.new_episode:
-                #     self.update_policy(TRAJECTORY_LENGTH)
+                self.experiences = {
+                        "rgb": self.rgb_tensor.to(self.device),                # 480, 640, 3
+                        "depth":self.depth_tensor.to(self.device),             # 720, 1280
+                        "occupancy_grid": self.occupancy_grid.to(self.device), # 100, 100
+                        "heuristic": self.heuristic_tensor.to(self.device),    # 1, 3
+                        "position": self.position_tensor.to(self.device),      # 1, 2
+                        "orientation": self.orientation_tensor.to(self.device),# 1, 4
+                        "ang_vel": self.ang_vel_tensor.to(self.device),        # 1, 3
+                        "lin_acc": self.lin_acc_tensor.to(self.device),        # 1, 3
+                    }
+                
+                action = self.predict_velocity()
+                self.buffer.store(state=self.experiences, action=action, reward=self.rewards, log_prob = self.log_probs)
 
-                self.model.eval() # Set model to evaluation mode
-
-                rgb = self.rgb_tensor.to(self.device)                # 480, 640, 3
-                depth = self.depth_tensor.to(self.device)            # 720, 1280
-                occupancy_grid = self.occupancy_grid.to(self.device) # 100, 100
-                heuristic = self.heuristic_tensor.to(self.device)    # 1, 3
-                position = self.position_tensor.to(self.device)      # 1, 2
-                orientation = self.orientation_tensor.to(self.device)# 1, 4
-                ang_vel = self.ang_vel_tensor.to(self.device)        # 1, 3
-                lin_acc = self.lin_acc_tensor.to(self.device)        # 1, 3
-
-                with torch.no_grad():
-                    mean, std = self.model(rgb, depth, occupancy_grid, heuristic, position, orientation, ang_vel, lin_acc)
-                velocity_vector, _ = self.sample_velocity(mean, std)
-                velocity_vector = velocity_vector.to('cpu').squeeze().tolist()
-                velo = Twist()
-                if not self.new_episode:
-                    velo.linear.x = velocity_vector[0]
-                    velo.linear.y = velocity_vector[1]
-                    velo.angular.z = velocity_vector[2]
-                else:
-                    if self.steps_since_update > 25:
-                        self.new_episode = False
-                self.velo_pub.publish(velo)
             except:
                 pass
+
+        else:
+            self.rewards = 0
+
+
+            
+
+    def predict_velocity(self):
+        self.gait_pub.publish(self.gait)
+        # self.steps_since_update += 1
+        if self.ai_controls:
+            # if self.steps_since_update >= TRAJECTORY_LENGTH and not self.new_episode:
+            #     self.update_policy(TRAJECTORY_LENGTH)
+            self.policy.eval() # Set model to evaluation mode
+            
+
+            with torch.no_grad():
+                mean, std = self.policy(self.experiences)
+            # self.buffer.store(state=self.experiences, action=(mean,std))
+            velocity_vector, self.log_probs = self.sample_velocity(mean, std)
+            velocity_vector = velocity_vector.to('cpu').squeeze().tolist()
+            velo = Twist()
+            if not self.new_episode:
+                velo.linear.x = velocity_vector[0]
+                velo.linear.y = velocity_vector[1]
+                velo.angular.z = velocity_vector[2]
+            else:
+                if self.steps_since_update > 25:
+                    self.new_episode = False
+            self.velo_pub.publish(velo)
+            return mean, std
 
     def sample_velocity(self, mean, std):
         dist = torch.distributions.Normal(mean, std)
@@ -109,6 +133,18 @@ class Policy:
         log_probs = dist.log_prob(velocity_vector).sum(axis=-1)  # Sum log probs for total log prob of the velocity vector
         return velocity_vector, log_probs
     
+    def advantage(self, rewards: list, values: list):
+        """
+        Compute advantages for each timestep in the trajectory.
+        
+        Args:
+        - rewards (list): List/array of actual rewards obtained.
+        - values (list): List/array of predicted values estimated by the Critic network.
+        
+        Returns:
+        - advantages (numpy array): Array of advantages for each timestep.
+        """
+        return np.array(rewards) - np.array(values)
     # def ppo_update(self, optimizer, policy_network, actions, old_log_probs, advantages, eps_clip=0.2):
     #     # Assuming 'actions', 'old_log_probs', and 'advantages' are collected during the episode
         
@@ -211,14 +247,14 @@ class Policy:
         # rospy.loginfo(f"occupancy grid tensor of size {self.occupancy_grid.size()}")
 
 
-    def heuristic_callback(self, msg, goal):
+    def heuristic_callback(self, msg, goal: Heuristic):
         self.heuristic_tensor[goal] = torch.tensor([msg.x_distance, msg.y_distance, msg.manhattan_distance])
 
-    def pose_callback(self, msg):
+    def pose_callback(self, msg: PoseStamped):
         position = msg.pose.position
         self.position_tensor = torch.tensor([[position.x, position.y]])
 
-    def imu_callback(self, msg):
+    def imu_callback(self, msg: Imu):
         orient = msg.orientation
         self.orientation_tensor = torch.tensor([[orient.x, orient.y, orient.z, orient.w]])
 
@@ -228,12 +264,12 @@ class Policy:
         lin_acc = msg.linear_acceleration
         self.lin_acc_tensor = torch.tensor([[lin_acc.x, lin_acc.y, lin_acc.z]])
 
-    def control_type_callback(self, msg):
+    def control_type_callback(self, msg: Bool):
         self.ai_controls = msg.data
 
     
-    def update_reward(self, msg):
-        self.rewards_since_update += msg.data
+    def update_reward(self, msg: Float32):
+        self.rewards += msg.data
 
     def new_episode_callback(self, msg):
         steps = self.steps_since_update
@@ -245,11 +281,13 @@ class Policy:
             if rospy.has_param('/RL/runs/models_folder'):
                 self.models_folder = rospy.get_param('/RL/runs/models_folder')
         else:
-            save_model(self.model, f"{self.models_folder}/latest.pt")
+            save_model(self.policy, f"{self.models_folder}/latest_policy.pt")
+            save_model(self.value, f"{self.models_folder}/latest_value.pt")
 
     def save_model_callback(self, msg):
-        save_model(self.model, f"{self.models_folder}/{msg.data}")
+        save_model(self.policy, f"{self.models_folder}/policy_{msg.data}")
+        save_model(self.value, f"{self.models_folder}/value_{msg.data}")
 
 
 if __name__ == '__main__':
-    model = Policy() 
+    ppo = ProximalPolicyOptimization() 

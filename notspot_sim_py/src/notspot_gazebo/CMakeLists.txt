@@ -16,7 +16,6 @@ find_package(catkin REQUIRED COMPONENTS
   gazebo_ros
   sensor_msgs
   std_msgs
-  gazebo_model_collision_plugin
   # your_custom_msgs_package, if you have custom messages or services
 )
 
@@ -24,6 +23,6 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   # INCLUDE_DIRS include
   # LIBRARIES your_package_name
-  CATKIN_DEPENDS roscpp gazebo_ros sensor_msgs std_msgs gazebo_model_collision_plugin # your_custom_msgs_package
+  CATKIN_DEPENDS roscpp gazebo_ros sensor_msgs std_msgs  # your_custom_msgs_package
   # DEPENDS system_lib
 )

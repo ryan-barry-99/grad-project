@@ -60,12 +60,22 @@ class PolicyNetwork(nn.Module):
         
 
 
-    def forward(self, rgb, depth, grid, heuristic, position, orientation, ang_vel, lin_acc):
-        rgb_out = self.rgb_branch(rgb)
-        depth_out = self.depth_branch(depth)
-        grid_out = self.grid_branch(grid)
+    def forward(self, state):
+        # rgb, depth, grid, heuristic, position, orientation, ang_vel, lin_acc
+        rgb_out = self.rgb_branch(state["rgb"])
+        depth_out = self.depth_branch(state["depth"])
+        grid_out = self.grid_branch(state["occupancy_grid"])
 
-        x = self.fusion_net(rgb_out, depth_out, grid_out, heuristic, position, orientation, ang_vel, lin_acc)
+        x = self.fusion_net(
+            rgb_out, 
+            depth_out, 
+            grid_out, 
+            state["heuristic"],
+            state["position"],
+            state["orientation"],
+            state["ang_vel"],
+            state["lin_acc"]
+            )
 
         mean = self.fc_final_mean(x)
         log_std = self.fc_final_log_std(x)
@@ -73,3 +83,39 @@ class PolicyNetwork(nn.Module):
         std = log_std.exp()
 
         return mean, std
+    
+
+
+class ValueNetwork(nn.Module):
+    def __init__(self):
+        super(ValueNetwork, self).__init__()
+        # Initialize CNN branches with appropriate input channels
+        self.rgb_branch = CNN_Branch(in_channels=3, dim1=480, dim2=640)  # RGB image
+        self.depth_branch = CNN_Branch(in_channels=1, dim1=720, dim2=1280)  # Depth image
+        self.grid_branch = CNN_Branch(in_channels=1, dim1=100, dim2=100)  # Grid image
+        self.fusion_net = DenseNetwork(63)
+
+        self.fc_final_value = nn.Linear(3, 1)  # Output a single value for state value
+
+    def forward(self, state):
+        # Forward pass through CNN branches
+        rgb_out = self.rgb_branch(state["rgb"])
+        depth_out = self.depth_branch(state["depth"])
+        grid_out = self.grid_branch(state["occupancy_grid"])
+
+        # Forward pass through fusion network
+        x = self.fusion_net(
+            rgb_out,
+            depth_out,
+            grid_out,
+            state["heuristic"],
+            state["position"],
+            state["orientation"],
+            state["ang_vel"],
+            state["lin_acc"]
+        )
+
+        # Output the state value
+        value = self.fc_final_value(x)
+
+        return value

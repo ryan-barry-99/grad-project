@@ -1,7 +1,12 @@
 hyperparameters:
   load_model: False
-  model_path: None
+  policy_model_path: None
+  value_model_path: None
   optimizer: 'Adam'
-  lr: 0.0025
+  lr_policy: 0.001
+  lr_value: 0.001
   gamma: 0.99
+  ppo_clip: 0.2
+  batch_size: 32
+  max_trajectory_length: 100
   learn: True
