@@ -17,6 +17,9 @@ class ExperienceBuffer:
         if log_prob is not None: self.log_probs.append(log_prob)
         if value is not None: self.values.append(value)
 
+    def at_capacity(self):
+        return len(self.states) == self.max_trajectory_length
+
     def clear(self):
         self.states = []
         self.actions = []

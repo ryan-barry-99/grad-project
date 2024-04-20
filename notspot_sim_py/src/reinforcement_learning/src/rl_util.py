@@ -22,9 +22,7 @@ def ros_image_to_pytorch_tensor(image_msg):
 
 
 
-def set_optimizer(model, hyperparameters):
-    optimizer_name = hyperparameters['optimizer']
-    learning_rate = hyperparameters['lr']
+def set_optimizer(model, optimizer, lr):
 
     # Dictionary mapping optimizer names to optimizer classes
     optimizer_mapping = {
@@ -39,11 +37,11 @@ def set_optimizer(model, hyperparameters):
         'SGD': optim.SGD,
     }
 
-    if optimizer_name in optimizer_mapping:
-        optimizer_class = optimizer_mapping[optimizer_name]
-        optimizer = optimizer_class(model.parameters(), lr=learning_rate)
+    if optimizer in optimizer_mapping:
+        optimizer_class = optimizer_mapping[optimizer]
+        optimizer = optimizer_class(model.parameters(), lr=lr)
     else:
-        raise ValueError(f'Unsupported optimizer: {optimizer_name}')
+        raise ValueError(f'Unsupported optimizer: {optimizer}')
     return optimizer
 
 

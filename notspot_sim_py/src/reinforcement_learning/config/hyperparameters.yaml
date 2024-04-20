@@ -6,6 +6,7 @@ hyperparameters:
   lr_policy: 0.001
   lr_value: 0.001
   gamma: 0.99
+  entropy_coef: 0.01
   ppo_clip: 0.2
   batch_size: 32
   max_trajectory_length: 100
