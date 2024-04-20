@@ -73,12 +73,15 @@ class ProximalPolicyOptimization:
         self.rewards = 0
         self.steps_since_update = 0
         self.lifespan = 0
+        self.total_distance_traveled = 0
         self.goal = False
         self.new_episode = True
         self.models_folder = False
         self.init_rewards_dir = False
         self.init_steps_dir = False
         self.init_goal_dir = False
+        self.init_distance_dir = False
+        self.old_position = None
         self.initialize_episodes()
         self.experiences = {}
         self.buffer = ExperienceBuffer(
@@ -115,6 +118,9 @@ class ProximalPolicyOptimization:
                     file.write(f"{self.lifespan}")
                 with open(f'{self.goal_folder}/episode_{self.episode_num}.txt', 'w') as file:
                     file.write(f"{self.goal}")
+                with open(f'{self.distance_folder}/episode_{self.episode_num}.txt', 'w') as file:
+                    file.write(f"{self.total_distance_traveled}")
+                    self.total_distance_traveled = 0
                 self.episode_num += 1
                 if self.buffer.length >= 1:
                     self.lifespan = 0
@@ -157,7 +163,7 @@ class ProximalPolicyOptimization:
                     self.update_networks()
                     self.buffer.clear()
             else:
-                self.publish_velocity([0,0,0])
+                self.publish_velocity([0,0,0,0,0,0])
                 self.reset_pub.publish("reset")
 
         else:
@@ -188,9 +194,16 @@ class ProximalPolicyOptimization:
         self.gait_pub.publish(self.gait)
         velo = Twist()
         if not self.new_episode:
-            velo.linear.x = velocity_vector[0]
-            velo.linear.y = velocity_vector[1]
-            velo.angular.z = velocity_vector[2]
+            velo.linear.x = -abs(velocity_vector[0]) + abs(velocity_vector[1])
+            velo.linear.x = -abs(velocity_vector[2]) + abs(velocity_vector[3])
+            velo.angular.z = -abs(velocity_vector[4]) + abs(velocity_vector[5])
+
+            if abs(velo.linear.x) >= abs(velo.angular.z) or abs(velo.linear.y) >= abs(velo.angular.z):
+                velo.angular.z = 0
+            if abs(velo.linear.y) >= abs(velo.linear.x) or abs(velo.angular.z) >= abs(velo.linear.x):
+                velo.linear.x = 0
+            if abs(velo.linear.x) >= abs(velo.linear.y) or abs(velo.angular.z) >= abs(velo.linear.y):
+                velo.linear.y = 0
         else:
             if len(self.buffer.states) > 25:
                 self.new_episode = False
@@ -283,6 +296,11 @@ class ProximalPolicyOptimization:
             if rospy.has_param('/RL/runs/goals_folder'):
                 self.goal_folder = rospy.get_param('/RL/runs/goals_folder')
                 self.init_goal_dir = True
+
+        while not self.init_distance_dir:
+            if rospy.has_param('/RL/runs/distance_folder'):
+                self.distance_folder = rospy.get_param('/RL/runs/distance_folder')
+                self.init_distance_dir = True
                 
 
     def rgb_image_callback(self, img: Image):
@@ -317,8 +335,19 @@ class ProximalPolicyOptimization:
 
     def pose_callback(self, msg: PoseStamped):
         position = msg.pose.position
+        if self.old_position is not None:
+            # Calculate distance traveled from the old position to the current position
+            distance_traveled = self.calculate_distance(self.old_position, position)
+            self.total_distance_traveled += distance_traveled
+        
+        # Update the old position with the current position
+        self.old_position = position
         self.position_tensor = torch.tensor([[position.x, position.y]])
 
+    def calculate_distance(self, pos1, pos2):
+        distance = ((pos2.x - pos1.x) ** 2 + (pos2.y - pos1.y) ** 2) ** 0.5
+        return distance
+    
     def imu_callback(self, msg: Imu):
         orient = msg.orientation
         self.orientation_tensor = torch.tensor([[orient.x, orient.y, orient.z, orient.w]])

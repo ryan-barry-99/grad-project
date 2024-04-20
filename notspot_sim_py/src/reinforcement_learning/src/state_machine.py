@@ -58,11 +58,14 @@ class StateMachine:
         if len(self.poses_tracked) >= NOT_MOVING_POSES:
             old_pos = self.poses_tracked[-NOT_MOVING_POSES].pose.position
             new_pos = self.poses_tracked[-1].pose.position
+            new_orient = self.poses_tracked[-1].pose.orientation
 
             dist = ((old_pos.x - new_pos.x)**2 + (old_pos.y - new_pos.y)**2)**(1/2)
 
             if dist < 1:
                 self.reward_pub.publish("not_moving")
+                if abs(new_orient.x) < 0.1 and abs(new_orient.y) < 0.1 and len(self.poses_tracked) >= NOT_MOVING_POSES:
+                    self.reward_pub.publish("upright")
 
         if len(self.poses_tracked) >= NUM_POSES_TRACKED:
             old_pos = self.poses_tracked[0].pose.position

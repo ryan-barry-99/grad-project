@@ -77,6 +77,7 @@ class Reward:
             "hits_wall": -1,
             "reach_goal": 1,
             "not_moving": -1,
+            "upright": 0.5
         }
         if msg.data in self.rewards.keys():
             reward = self.rewards[msg.data]
