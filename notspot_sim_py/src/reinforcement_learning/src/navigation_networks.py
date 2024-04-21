@@ -59,8 +59,8 @@ class PolicyNetwork(nn.Module):
         self.grid_branch = CNN_Branch(in_channels=1, dim1=100, dim2=100)  # Grid image
         self.fusion_net = DenseNetwork(63)
 
-        self.fc_final_mean = nn.Linear(3, 6)
-        self.fc_final_log_std = nn.Linear(3, 6)
+        self.fc_final_mean = nn.Linear(3, 3)
+        self.fc_final_log_std = nn.Linear(3, 3)
         
 
 
@@ -82,12 +82,12 @@ class PolicyNetwork(nn.Module):
             ))
 
         mean = self.fc_final_mean(x)
-        mean[:, [0]] = torch.clamp(mean[:, [0]], min=-MAX_X_VEL, max=0)
-        mean[:, [1]] = torch.clamp(mean[:, [1]], min=0, max=MAX_X_VEL)
-        mean[:, [2]] = torch.clamp(mean[:, [0]], min=-MAX_Y_VEL, max=0)
-        mean[:, [3]] = torch.clamp(mean[:, [1]], min=0, max=MAX_Y_VEL)
-        mean[:, [4]] = torch.clamp(mean[:, [2]], min=-MAX_Z_VEL, max=0)
-        mean[:, [5]] = torch.clamp(mean[:, [3]], min=0, max=MAX_Z_VEL)
+        mean[:, [0]] = torch.clamp(mean[:, [0]], min=-MAX_X_VEL, max=MAX_X_VEL)
+        # mean[:, [1]] = torch.clamp(mean[:, [1]], min=0, max=MAX_X_VEL)
+        mean[:, [1]] = torch.clamp(mean[:, [0]], min=-MAX_Y_VEL, max=MAX_Y_VEL)
+        # mean[:, [3]] = torch.clamp(mean[:, [1]], min=0, max=MAX_Y_VEL)
+        mean[:, [2]] = torch.clamp(mean[:, [2]], min=-MAX_Z_VEL, max=MAX_Z_VEL)
+        # mean[:, [5]] = torch.clamp(mean[:, [3]], min=0, max=MAX_Z_VEL)
 
         log_std = self.fc_final_log_std(x)
         log_std = torch.clamp(log_std, min=LOG_SIG_MIN, max=LOG_SIG_MAX)

@@ -74,10 +74,10 @@ class Reward:
         self.rewards = {
             "hits_wall": -1,
             "reach_goal": 10,
-            "not_moving": -0.1,
+            "not_moving": -0.5,
             "upright": 0.05,
-            "fell": -10,
-            "moving_forward": 0.1,
+            "fell": -50,
+            "moving_forward": 0.75,
             "moving_backward": -0.1
         }
         if msg.data in self.rewards.keys():

@@ -83,6 +83,7 @@ class ProximalPolicyOptimization:
         self.init_goal_dir = False
         self.init_distance_dir = False
         self.old_position = None
+        self.go = False
         self.initialize_episodes()
         self.experiences = {}
         self.buffer = ExperienceBuffer(
@@ -116,6 +117,7 @@ class ProximalPolicyOptimization:
     def step_callback(self, msg: Bool):
         if msg.data:
             if self.new_episode:
+                self.go = False
                 with open(f'{self.rewards_folder}/episode_{self.episode_num}.txt', 'w') as f:
                     f.write(f"{self.total_rewards}")
                     self.total_rewards = 0
@@ -143,7 +145,8 @@ class ProximalPolicyOptimization:
                         save_model(self.value_network, f"{self.models_folder}/latest_value.pt")
                 self.new_episode = False       
             self.steps_since_update += 1
-            if self.steps_since_update >= 5:  
+            if self.steps_since_update >= 4:  
+                self.go = True
                 self.lifespan += 1
                 self.experiences = {
                         "rgb": self.rgb_tensor.to(self.device),                # 480, 640, 3
@@ -171,7 +174,8 @@ class ProximalPolicyOptimization:
                     self.update_networks()
                     self.buffer.clear()
             else:
-                self.publish_velocity([0,0,0,0,0,0])
+                self.go = False
+                self.publish_velocity([0,0,0])
                 self.reset_pub.publish("reset")
 
         else:
@@ -199,16 +203,25 @@ class ProximalPolicyOptimization:
         return value
     
     def prep_velo(self, velocity_vector):
-        vx = -abs(velocity_vector[0][0]) + abs(velocity_vector[0][1])
-        vy = -abs(velocity_vector[0][2]) + abs(velocity_vector[0][3])
-        # vy = 0
-        vz = -abs(velocity_vector[0][4]) + abs(velocity_vector[0][5])
-        if abs(vx) >= abs(vz) or abs(vy) >= abs(vz):
-            vz = 0
-        if abs(vy) >= abs(vx) or abs(vz) >= abs(vx):
-            vx = 0
-        if abs(vx) >= abs(vy) or abs(vz) >= abs(vy):
-            vy = 0
+        # vx = -abs(velocity_vector[0][0]) + abs(velocity_vector[0][1])
+        # vy = -abs(velocity_vector[0][2]) + abs(velocity_vector[0][3])
+        # # vy = 0
+        # vz = -abs(velocity_vector[0][4]) + abs(velocity_vector[0][5])
+        def sign(num):
+            return (num > 0).float() - (num < 0).float()
+        
+        vx = sign(velocity_vector[0][0])*min(abs(velocity_vector[0][0]), 2.5)
+        vy = sign(velocity_vector[0][1])*min(abs(velocity_vector[0][1]), 0.5)
+        vz = sign(velocity_vector[0][2])*min(abs(velocity_vector[0][2]), 1.0)
+
+        if vx < 0:
+            vx = max(vx, -1)
+        # if abs(vx) >= abs(vz) or abs(vy) >= abs(vz):
+        #     vz = 0
+        # if abs(vy) >= abs(vx) or abs(vz) >= abs(vx):
+        #     vx = 0
+        # if abs(vx) >= abs(vy) or abs(vz) >= abs(vy):
+        #     vy = 0
         return [vx, vy, vz]
         
     def publish_velocity(self, velocity_vector):
@@ -219,7 +232,7 @@ class ProximalPolicyOptimization:
             velo.linear.y = velocity_vector[1]
             velo.angular.z = velocity_vector[2]
         else:
-            if len(self.buffer.states) > 25:
+            if len(self.buffer.states) > 4:
                 self.new_episode = False
         self.velo_pub.publish(velo)
         
@@ -377,7 +390,7 @@ class ProximalPolicyOptimization:
 
     
     def update_reward(self, msg: Float32):
-        if not self.new_episode:
+        if self.go:
             self.rewards += msg.data
             self.total_rewards += msg.data
     

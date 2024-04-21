@@ -23,7 +23,7 @@ class StateMachine:
 
         rospy.Subscriber('/gazebo/model_poses/robot/notspot', PoseStamped, self.robot_pose_callback)
 
-        self.timer = rospy.Timer(rospy.Duration(0.5), self.timer_callback, reset=True)
+        self.timer = rospy.Timer(rospy.Duration(0.75), self.timer_callback, reset=True)
         self.pc_pub = rospy.Publisher('velodyne_points_xyz', PointCloud, queue_size=10)
         self.pc_rs_pub = rospy.Publisher('realsense_points_xyz', PointCloud, queue_size=10)
         self.step_pub = rospy.Publisher('/RL/step', Bool, queue_size=1)
@@ -90,8 +90,10 @@ class StateMachine:
                     self.poses_tracked = []
 
             
-            if self.velo.linear.x > 1:
+            if self.velo.linear.x > 0:
                 self.reward_pub.publish("moving_forwards")
+            elif self.velo.linear.x < 0:
+                self.reward_pub.publish("moving_backward")
 
             self.checking = False
 

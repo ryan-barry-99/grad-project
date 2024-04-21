@@ -1,4 +1,4 @@
 *.pyc
 runs*
-*.ipynb
 *.json
+test.ipynb
