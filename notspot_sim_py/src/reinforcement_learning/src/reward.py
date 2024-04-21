@@ -41,9 +41,7 @@ class Reward:
     def new_episode_callback(self, msg: Bool):
         self.new_episode = msg.data
         if self.new_episode:
-            with open(f'{self.rewards_folder}/episode_{self.episode_num}.txt', 'w') as f:
-                f.write(str(self.total_reward.data))
-            if self.episode_num % 10 == 0:
+            if self.episode_num % 50 == 0:
                 self.save_model_pub.publish(f"episode_{self.episode_num}.pt")
             self.episode_num += 1
             self.total_reward = Float32()
@@ -75,9 +73,12 @@ class Reward:
     def calc_reward(self, msg: String):
         self.rewards = {
             "hits_wall": -1,
-            "reach_goal": 1,
-            "not_moving": -1,
-            "upright": 0.5
+            "reach_goal": 10,
+            "not_moving": -0.1,
+            "upright": 0.05,
+            "fell": -10,
+            "moving_forward": 0.1,
+            "moving_backward": -0.1
         }
         if msg.data in self.rewards.keys():
             reward = self.rewards[msg.data]

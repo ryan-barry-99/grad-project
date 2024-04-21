@@ -48,7 +48,7 @@ LOG_SIG_MAX = 0.1
 
 MAX_X_VEL = 2.5
 MAX_Y_VEL = 0.5
-MAX_Z_VEL = 0.8
+MAX_Z_VEL = 0.3
 
 class PolicyNetwork(nn.Module):
     def __init__(self):
@@ -104,7 +104,7 @@ class ValueNetwork(nn.Module):
         self.rgb_branch = CNN_Branch(in_channels=3, dim1=480, dim2=640)  # RGB image
         self.depth_branch = CNN_Branch(in_channels=1, dim1=720, dim2=1280)  # Depth image
         self.grid_branch = CNN_Branch(in_channels=1, dim1=100, dim2=100)  # Grid image
-        self.fusion_net = DenseNetwork(69)
+        self.fusion_net = DenseNetwork(66)
 
         self.fc_final_value = nn.Linear(3, 1)  # Output a single value for state value
 

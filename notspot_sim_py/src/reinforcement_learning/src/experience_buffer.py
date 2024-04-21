@@ -41,15 +41,19 @@ class ExperienceBuffer:
         self.values = []
 
     def get_batch(self, batch_size=None):
-        if batch_size is not None:
-            indices = random.sample(range(self.length), batch_size)
-        else:
-            indices = random.sample(range(self.length), self.batch_size)
-        states = [self.states[i-1] for i in indices]
-        actions = [self.actions[i-1] for i in indices]
-        rewards = [self.rewards[i-1] for i in indices]
-        old_log_probs = [self.old_log_probs[i-1] for i in indices]
-        new_log_probs = [self.new_log_probs[i-1] for i in indices]
-        values = [self.values[i-1] for i in indices]
+        if batch_size is None:
+            batch_size = self.batch_size
+        
+        # Get the indices of the most recent batch
+        start_index = max(0, self.length - batch_size)
+        end_index = self.length
+        indices = list(range(start_index, end_index))
+
+        states = [self.states[i] for i in indices]
+        actions = [self.actions[i] for i in indices]
+        rewards = [self.rewards[i] for i in indices]
+        old_log_probs = [self.old_log_probs[i] for i in indices]
+        new_log_probs = [self.new_log_probs[i] for i in indices]
+        values = [self.values[i] for i in indices]
         
         return states, actions, rewards, old_log_probs, new_log_probs, values

@@ -71,6 +71,7 @@ class ProximalPolicyOptimization:
         self.gait = "trot"
         self.ai_controls = True
         self.rewards = 0
+        self.total_rewards = 0
         self.steps_since_update = 0
         self.lifespan = 0
         self.total_distance_traveled = 0
@@ -100,9 +101,10 @@ class ProximalPolicyOptimization:
         rospy.Subscriber('/notspot_imu/base_link_orientation', Imu, self.imu_callback)
         rospy.Subscriber('/AI_Control', Bool, self.control_type_callback)
         rospy.Subscriber('/RL/step', Bool, self.step_callback)
-        rospy.Subscriber('/RL/reward/action', Float32, self.update_reward)
+        rospy.Subscriber('/RL/reward/action', Float32, self.update_reward) 
         rospy.Subscriber('/RL/episode/new', Bool, self.new_episode_callback)
         rospy.Subscriber('/RL/model/save', String, self.save_model_callback)
+        rospy.Subscriber('/RL/states/reward', String, self.states_callback)
 
         # Initialize the heuristic tensor
         self.heuristic_tensor = torch.zeros(num_goals, 3)  # Initialize with zeros
@@ -114,6 +116,9 @@ class ProximalPolicyOptimization:
     def step_callback(self, msg: Bool):
         if msg.data:
             if self.new_episode:
+                with open(f'{self.rewards_folder}/episode_{self.episode_num}.txt', 'w') as f:
+                    f.write(f"{self.total_rewards}")
+                    self.total_rewards = 0
                 with open(f'{self.steps_folder}/episode_{self.episode_num}.txt', 'w') as file:
                     file.write(f"{self.lifespan}")
                 with open(f'{self.goal_folder}/episode_{self.episode_num}.txt', 'w') as file:
@@ -122,6 +127,7 @@ class ProximalPolicyOptimization:
                     file.write(f"{self.total_distance_traveled}")
                     self.total_distance_traveled = 0
                 self.episode_num += 1
+                rospy.loginfo(f"Starting episode {self.episode_num}")
                 if self.buffer.length >= 1:
                     self.lifespan = 0
                     self.new_episode = False
@@ -135,9 +141,9 @@ class ProximalPolicyOptimization:
                     if self.models_folder is not None:
                         save_model(self.policy_network, f"{self.models_folder}/latest_policy.pt")
                         save_model(self.value_network, f"{self.models_folder}/latest_value.pt")
-                        
+                self.new_episode = False       
             self.steps_since_update += 1
-            if self.steps_since_update >= 30:  
+            if self.steps_since_update >= 5:  
                 self.lifespan += 1
                 self.experiences = {
                         "rgb": self.rgb_tensor.to(self.device),                # 480, 640, 3
@@ -152,6 +158,8 @@ class ProximalPolicyOptimization:
                 
                 mean, std = self.policy(self.experiences)
                 velocity_vector, self.log_probs = self.sample_velocity(mean, std)
+                velocity_vector = torch.tensor(self.prep_velo(velocity_vector), requires_grad=True).to(self.device).unsqueeze(0)
+                
                 value = self.value(self.experiences, velocity_vector).tolist()
                 self.buffer.store(state=self.experiences, action=velocity_vector, reward=self.rewards, log_prob = self.log_probs, value=value)
                 
@@ -190,20 +198,26 @@ class ProximalPolicyOptimization:
             value = self.value_network(experience, action)
         return value
     
+    def prep_velo(self, velocity_vector):
+        vx = -abs(velocity_vector[0][0]) + abs(velocity_vector[0][1])
+        vy = -abs(velocity_vector[0][2]) + abs(velocity_vector[0][3])
+        # vy = 0
+        vz = -abs(velocity_vector[0][4]) + abs(velocity_vector[0][5])
+        if abs(vx) >= abs(vz) or abs(vy) >= abs(vz):
+            vz = 0
+        if abs(vy) >= abs(vx) or abs(vz) >= abs(vx):
+            vx = 0
+        if abs(vx) >= abs(vy) or abs(vz) >= abs(vy):
+            vy = 0
+        return [vx, vy, vz]
+        
     def publish_velocity(self, velocity_vector):
         self.gait_pub.publish(self.gait)
         velo = Twist()
         if not self.new_episode:
-            velo.linear.x = -abs(velocity_vector[0]) + abs(velocity_vector[1])
-            velo.linear.x = -abs(velocity_vector[2]) + abs(velocity_vector[3])
-            velo.angular.z = -abs(velocity_vector[4]) + abs(velocity_vector[5])
-
-            if abs(velo.linear.x) >= abs(velo.angular.z) or abs(velo.linear.y) >= abs(velo.angular.z):
-                velo.angular.z = 0
-            if abs(velo.linear.y) >= abs(velo.linear.x) or abs(velo.angular.z) >= abs(velo.linear.x):
-                velo.linear.x = 0
-            if abs(velo.linear.x) >= abs(velo.linear.y) or abs(velo.angular.z) >= abs(velo.linear.y):
-                velo.linear.y = 0
+            velo.linear.x = velocity_vector[0]
+            velo.linear.y = velocity_vector[1]
+            velo.angular.z = velocity_vector[2]
         else:
             if len(self.buffer.states) > 25:
                 self.new_episode = False
@@ -363,9 +377,13 @@ class ProximalPolicyOptimization:
 
     
     def update_reward(self, msg: Float32):
-        if msg.data > 0:
+        if not self.new_episode:
+            self.rewards += msg.data
+            self.total_rewards += msg.data
+    
+    def states_callback(self, msg: String):
+        if msg.data == "reach_goal":
             self.goal = True
-        self.rewards += msg.data
 
     def new_episode_callback(self, msg):
         self.velo_pub.publish(Twist())
