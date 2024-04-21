@@ -1,13 +1,13 @@
 hyperparameters:
-  load_model: True
-  policy_model_path: /media/ryan/DataPad/ros_ws/src/notspot_sim_py/src/reinforcement_learning/runs/2024_04_21_11_32_31/models/latest_policy.pt
-  value_model_path: /media/ryan/DataPad/ros_ws/src/notspot_sim_py/src/reinforcement_learning/runs/2024_04_21_11_32_31/models/latest_value.pt
+  load_model: False
+  policy_model_path: None
+  value_model_path: None
   optimizer: 'Adam'
   lr_policy: 0.001
   lr_value: 0.0001
   gamma: 0.99
-  entropy_coef: 0.01
+  entropy_coef: 0.1
   ppo_clip: 0.2
-  batch_size: 6
-  max_trajectory_length: 6
+  batch_size: 10
+  max_trajectory_length: 10
   learn: True

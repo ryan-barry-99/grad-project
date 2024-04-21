@@ -5,8 +5,10 @@ import rospkg
 from gazebo_msgs.msg import ModelState
 from gazebo_msgs.srv import SetModelState
 from geometry_msgs.msg import Pose, Point, Quaternion
+from tf.transformations import quaternion_from_euler
 from std_msgs.msg import String
 import subprocess
+import random
 
 class RobotSpawner:
     def __init__(self):
@@ -45,8 +47,14 @@ class RobotSpawner:
             rospy.logwarn("Invalid command received: %s", data.data)
 
     def pose_callback(self, data):
-        self.pose.position = data.position
-        self.pose.orientation = data.orientation
+            # Generate a random Z rotation (in radians)
+            random_z_rotation = random.uniform(0, 2 * 3.14159)
+
+            # Convert the random Z rotation to a quaternion
+            quaternion = quaternion_from_euler(0, 0, random_z_rotation)
+
+            # Set the orientation (quaternion) of the pose
+            self.pose.orientation = Quaternion(*quaternion)
 
     def expand_xacro(self, file_path):
         try:

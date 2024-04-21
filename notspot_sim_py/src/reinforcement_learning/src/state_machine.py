@@ -71,29 +71,30 @@ class StateMachine:
 
                 dist = ((old_pos.x - new_pos.x)**2 + (old_pos.y - new_pos.y)**2)**(1/2)
 
-                if dist < 0.5:
+                if dist < 0.75:
                     self.reward_pub.publish("not_moving")
                     if abs(new_orient.x) < 0.1 and abs(new_orient.y) < 0.1 and len(self.poses_tracked) >= NOT_MOVING_POSES:
                         self.reward_pub.publish("upright")
 
                 if abs(new_orient.x) > 0.15 or abs(new_orient.y) > 0.15:
                     self.reward_pub.publish("fell")
-                    self.reward_pub.publish("stuck")
+            
+                old_pos = self.poses_tracked[-2].pose.position
+                dist = ((old_pos.x - new_pos.x)**2 + (old_pos.y - new_pos.y)**2)**(1/2)
+                if self.velo.linear.x > 0 and dist > 0.05:
+                    self.reward_pub.publish("moving_forwards")
+                else:
+                    self.reward_pub.publish("moving_backward")
 
             if len(self.poses_tracked) >= NUM_POSES_TRACKED:
                 old_pos = self.poses_tracked[0].pose.position
 
                 dist = ((old_pos.x - new_pos.x)**2 + (old_pos.y - new_pos.y)**2)**(1/2)
 
-                if dist < 0.5:
+                if dist < 0.75:
                     self.reward_pub.publish("stuck")
                     self.poses_tracked = []
 
-            
-            if self.velo.linear.x > 0:
-                self.reward_pub.publish("moving_forwards")
-            elif self.velo.linear.x < 0:
-                self.reward_pub.publish("moving_backward")
 
             self.checking = False
 

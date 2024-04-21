@@ -31,7 +31,7 @@ class DenseNetwork(nn.Module):
         # Define the layers of the dense network
         self.fc1 = nn.Linear(input_size, 64)
         self.fc2 = nn.Linear(64, 32)
-        self.fc3 = nn.Linear(32, 3)
+        self.fc3 = nn.Linear(32, 16)
 
     def forward(self, fused_observation: tuple):
         # Concatenate the output tensors from the CNN branches with other tensors
@@ -39,7 +39,7 @@ class DenseNetwork(nn.Module):
         # Pass through dense layers
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
+        x = F.tanh(self.fc3(x))
         return x
 
     
@@ -59,8 +59,10 @@ class PolicyNetwork(nn.Module):
         self.grid_branch = CNN_Branch(in_channels=1, dim1=100, dim2=100)  # Grid image
         self.fusion_net = DenseNetwork(63)
 
-        self.fc_final_mean = nn.Linear(3, 3)
-        self.fc_final_log_std = nn.Linear(3, 3)
+        self.sign_layer = nn.Linear(16,8)
+
+        self.fc_final_mean = nn.Linear(8, 3)
+        self.fc_final_log_std = nn.Linear(8, 3)
         
 
 
@@ -80,6 +82,8 @@ class PolicyNetwork(nn.Module):
             state["ang_vel"],
             state["lin_acc"]
             ))
+
+        x = self.sign_layer(x)
 
         mean = self.fc_final_mean(x)
         mean[:, [0]] = torch.clamp(mean[:, [0]], min=-MAX_X_VEL, max=MAX_X_VEL)
@@ -106,7 +110,9 @@ class ValueNetwork(nn.Module):
         self.grid_branch = CNN_Branch(in_channels=1, dim1=100, dim2=100)  # Grid image
         self.fusion_net = DenseNetwork(66)
 
-        self.fc_final_value = nn.Linear(3, 1)  # Output a single value for state value
+        self.sign_layer = nn.Linear(16,8)
+
+        self.fc_final_value = nn.Linear(8, 1)  # Output a single value for state value
 
     def forward(self, state, action):
         # Forward pass through CNN branches
@@ -126,6 +132,8 @@ class ValueNetwork(nn.Module):
             state["lin_acc"],
             action
         ))
+
+        x = self.sign_layer(x)
 
         # Output the state value
         value = self.fc_final_value(x)

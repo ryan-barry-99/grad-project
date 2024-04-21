@@ -12,7 +12,7 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import String, Bool, Float32
 from navigation_networks import PolicyNetwork, ValueNetwork
 from functools import partial
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Pose
 from sensor_msgs.msg import Imu
 from rl_util import *
 from experience_buffer import ExperienceBuffer
@@ -65,6 +65,7 @@ class ProximalPolicyOptimization:
         self.velo_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
         self.gait_pub = rospy.Publisher("/gait", String, queue_size=10)
         self.reset_pub = rospy.Publisher('/robot_reset_command', String, queue_size=10)
+        self.pose_pub = rospy.Publisher('/robot_reset_position', Pose, queue_size=10)
         
         # Initialize other variables
         self.bridge = CvBridge()
@@ -84,6 +85,9 @@ class ProximalPolicyOptimization:
         self.init_distance_dir = False
         self.old_position = None
         self.go = False
+        self.closest_goal = np.inf
+        self.goal_dist = np.inf
+        self.ending_goal = np.inf
         self.initialize_episodes()
         self.experiences = {}
         self.buffer = ExperienceBuffer(
@@ -106,6 +110,7 @@ class ProximalPolicyOptimization:
         rospy.Subscriber('/RL/episode/new', Bool, self.new_episode_callback)
         rospy.Subscriber('/RL/model/save', String, self.save_model_callback)
         rospy.Subscriber('/RL/states/reward', String, self.states_callback)
+        rospy.Subscriber('/heuristic/goal/0', Heuristic, self.goal_callback)
 
         # Initialize the heuristic tensor
         self.heuristic_tensor = torch.zeros(num_goals, 3)  # Initialize with zeros
@@ -124,7 +129,7 @@ class ProximalPolicyOptimization:
                 with open(f'{self.steps_folder}/episode_{self.episode_num}.txt', 'w') as file:
                     file.write(f"{self.lifespan}")
                 with open(f'{self.goal_folder}/episode_{self.episode_num}.txt', 'w') as file:
-                    file.write(f"{self.goal}")
+                    file.write(f"{self.closest_goal}\n{self.ending_goal}")
                 with open(f'{self.distance_folder}/episode_{self.episode_num}.txt', 'w') as file:
                     file.write(f"{self.total_distance_traveled}")
                     self.total_distance_traveled = 0
@@ -147,6 +152,9 @@ class ProximalPolicyOptimization:
             self.steps_since_update += 1
             if self.steps_since_update >= 4:  
                 self.go = True
+                self.ending_goal = self.goal_dist
+                if self.steps_since_update == 4:
+                    self.pose_pub.publish(Pose())
                 self.lifespan += 1
                 self.experiences = {
                         "rgb": self.rgb_tensor.to(self.device),                # 480, 640, 3
@@ -211,7 +219,7 @@ class ProximalPolicyOptimization:
             return (num > 0).float() - (num < 0).float()
         
         vx = sign(velocity_vector[0][0])*min(abs(velocity_vector[0][0]), 2.5)
-        vy = sign(velocity_vector[0][1])*min(abs(velocity_vector[0][1]), 0.5)
+        vy = sign(velocity_vector[0][1])*min(abs(velocity_vector[0][1]), 1.0)
         vz = sign(velocity_vector[0][2])*min(abs(velocity_vector[0][2]), 1.0)
 
         if vx < 0:
@@ -407,6 +415,11 @@ class ProximalPolicyOptimization:
     def save_model_callback(self, msg: String):
         save_model(self.policy_network, f"{self.models_folder}/policy_{msg.data}")
         save_model(self.value_network, f"{self.models_folder}/value_{msg.data}")
+
+    def goal_callback(self, msg: Heuristic):
+        self.goal_dist = msg.manhattan_distance
+        if msg.manhattan_distance < self.closest_goal:
+            self.closest_goal = msg.manhattan_distance
 
 
 if __name__ == '__main__':

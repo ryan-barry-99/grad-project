@@ -4,7 +4,7 @@ import rospy
 import rospkg
 from geometry_msgs.msg import PoseStamped
 from reinforcement_learning.msg import Heuristic
-from std_msgs.msg import Float32, Bool, String
+from std_msgs.msg import Float32, Bool, String, Int32
 import os
 
 class Reward:
@@ -18,6 +18,7 @@ class Reward:
             'action_reward': rospy.Publisher('/RL/reward/action', Float32, queue_size=10),
             'total_reward': rospy.Publisher('/RL/reward/total', Float32, queue_size=10)
         }
+        self.epi_num_pub = rospy.Publisher("/RL/episode_num", Int32, queue_size=10)
         self.rospack = rospkg.RosPack()
 
         self.closest_heuristic = Heuristic()
@@ -30,7 +31,7 @@ class Reward:
         rospy.Subscriber('/RL/episode/new', Bool, self.new_episode_callback)
         rospy.Subscriber('/RL/states/reward', String, self.calc_reward)
 
-        rospy.spin()
+        self.run()
 
     def robot_pose_callback(self, msg: PoseStamped):
         self.robot_pose_stamped = msg
@@ -41,11 +42,10 @@ class Reward:
     def new_episode_callback(self, msg: Bool):
         self.new_episode = msg.data
         if self.new_episode:
-            if self.episode_num % 50 == 0:
+            if self.episode_num % 10 == 0:
                 self.save_model_pub.publish(f"episode_{self.episode_num}.pt")
             self.episode_num += 1
             self.total_reward = Float32()
-            self.new_episode_pub.publish(False)
 
     def initialize_rewards(self):
         while not self.init_rewards_dir:
@@ -73,25 +73,26 @@ class Reward:
     def calc_reward(self, msg: String):
         self.rewards = {
             "hits_wall": -1,
-            "reach_goal": 10,
-            "not_moving": -0.5,
-            "upright": 0.05,
-            "fell": -50,
-            "moving_forward": 0.75,
-            "moving_backward": -0.1
+            "reach_goal": 1,
+            "not_moving": -0.05,
+            "upright": 0,
+            "fell": -1,
+            "moving_forward": 0,
+            "moving_backward": 0
         }
         if msg.data in self.rewards.keys():
             reward = self.rewards[msg.data]
             self.publishers['action_reward'].publish(reward)
             self.total_reward.data += reward
             self.publishers['total_reward'].publish(self.total_reward)
-        if msg.data == "reach_goal" or msg.data == "stuck":
+        if msg.data == "reach_goal" or msg.data == "stuck" or msg.data == "fell":
             self.new_episode_pub.publish(True)
             
 
     def run(self):
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
+            self.epi_num_pub.publish(self.episode_num)
             rate.sleep()
 
 if __name__ == '__main__':
