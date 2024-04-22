@@ -402,10 +402,12 @@ class ProximalPolicyOptimization:
             # Calculate distance traveled from the old position to the current position
             distance_traveled = self.calculate_distance(self.old_position, position)
             self.total_distance_traveled += distance_traveled
+        else:
+            distance_traveled = 0
         
         # Update the old position with the current position
         self.old_position = position
-        self.position_tensor = torch.tensor([[position.x, position.y]])
+        self.position_tensor = torch.tensor([[position.x, position.y, distance_traveled]])
 
     def calculate_distance(self, pos1, pos2):
         distance = ((pos2.x - pos1.x) ** 2 + (pos2.y - pos1.y) ** 2) ** 0.5

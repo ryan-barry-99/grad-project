@@ -1,15 +1,15 @@
 hyperparameters:
   load_model: False
-  run: "2024_04_22_10_24_52"
+  run: "2024_04_22_16_01_40"
   policy_model_path: "latest_policy.pt"
   value_model_path: "latest_value.pt"
   optimizer: 'RMSprop'
   lr_policy: 0.001
-  lr_value: 0.0001
+  lr_value: 0.00001
   momentum: 0.9
   gamma: 0.99
   entropy_coef: 0.1
   ppo_clip: 0.2
-  batch_size: 4
-  max_trajectory_length: 4
+  batch_size: 7
+  max_trajectory_length: 7
   learn: True

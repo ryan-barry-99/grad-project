@@ -10,7 +10,7 @@ from sensor_msgs.msg import PointCloud2, PointCloud
 import numpy as np
 
 NUM_POSES_TRACKED = 60
-NOT_MOVING_POSES = 4
+NOT_MOVING_POSES = 2
 
 class StateMachine:
     def __init__(self):
@@ -20,8 +20,11 @@ class StateMachine:
 
         rospy.Subscriber('/heuristic/goal/0', Heuristic, self.goal_callback)
         self.atGoal = False
+        self.init_goal_dist = None
 
         rospy.Subscriber('/gazebo/model_poses/robot/notspot', PoseStamped, self.robot_pose_callback)
+        self.init_pos = None
+        self.min_start_dist = 0
 
         self.timer = rospy.Timer(rospy.Duration(0.75), self.timer_callback, reset=True)
         self.pc_pub = rospy.Publisher('velodyne_points_xyz', PointCloud, queue_size=10)
@@ -43,10 +46,14 @@ class StateMachine:
         self.step_pub.publish(True)
         self.newStep = True
         self.checking = True
+        self.min_start_dist = 0
+        self.init_goal_dist = None
         self.check_movement()
 
 
     def goal_callback(self, msg: Heuristic):
+        if self.init_goal_dist is None:
+            self.init_goal_dist = msg.manhattan_distance
         if not self.atGoal and msg.manhattan_distance < 3:
             self.atGoal = True
             self.reward_pub.publish("reach_goal")
@@ -55,6 +62,8 @@ class StateMachine:
 
     def robot_pose_callback(self, msg: PoseStamped):
         if self.newStep:
+            if self.init_pos is None:
+                self.init_pos = msg.pose.position
             self.poses_tracked.append(msg)
             if len(self.poses_tracked) > NUM_POSES_TRACKED:
                 self.poses_tracked.pop(0)
@@ -70,9 +79,9 @@ class StateMachine:
                 new_pos = self.poses_tracked[-1].pose.position
                 new_orient = self.poses_tracked[-1].pose.orientation
 
-                dist = ((old_pos.x - new_pos.x)**2 + (old_pos.y - new_pos.y)**2)**(1/2)
+                dist = self.calc_dist(old_pos, new_pos)
 
-                if dist < 0.5:
+                if dist < 0.75:
                     self.reward_pub.publish("not_moving")
                     self.dist_pub.publish(dist)
                     if abs(new_orient.x) < 0.1 and abs(new_orient.y) < 0.1 and len(self.poses_tracked) >= NOT_MOVING_POSES:
@@ -82,16 +91,19 @@ class StateMachine:
                     self.reward_pub.publish("fell")
             
                 old_pos = self.poses_tracked[-2].pose.position
-                dist = ((old_pos.x - new_pos.x)**2 + (old_pos.y - new_pos.y)**2)**(1/2)
-                if self.velo.linear.x > 0 and dist > 0.05:
+                dist = self.calc_dist(old_pos, new_pos)
+                start_dist = self.calc_manhattan_dist(self.init_pos, new_pos)
+                if  start_dist > self.min_start_dist and self.init_goal_dist is not None and start_dist < self.init_goal_dist:
+                    self.min_start_dist = start_dist
                     self.reward_pub.publish("moving_forwards")
-                else:
-                    self.reward_pub.publish("moving_backward")
+
+                if self.velo.linear.x <= 0 or dist <= 0.05:
+                    self.reward_pub.publish("moving_backwards")
 
             if len(self.poses_tracked) >= NUM_POSES_TRACKED:
                 old_pos = self.poses_tracked[0].pose.position
 
-                dist = ((old_pos.x - new_pos.x)**2 + (old_pos.y - new_pos.y)**2)**(1/2)
+                dist = self.calc_dist(old_pos, new_pos)
 
                 if dist < 0.5:
                     self.reward_pub.publish("stuck")
@@ -101,6 +113,11 @@ class StateMachine:
             self.checking = False
 
 
+    def calc_dist(self, pos1, pos2):
+        return ((pos2.x - pos1.x)**2 + (pos2.y - pos1.y)**2)**(1/2)
+    
+    def calc_manhattan_dist(self, pos1, pos2):
+        return abs(pos2.x - pos1.x) + abs(pos2.y - pos1.y)
 
 
 
