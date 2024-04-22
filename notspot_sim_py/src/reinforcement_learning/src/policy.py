@@ -85,6 +85,7 @@ class ProximalPolicyOptimization:
         self.init_distance_dir = False
         self.old_position = None
         self.go = False
+        self.dist = np.inf
         self.closest_goal = np.inf
         self.goal_dist = np.inf
         self.ending_goal = np.inf
@@ -111,6 +112,7 @@ class ProximalPolicyOptimization:
         rospy.Subscriber('/RL/model/save', String, self.save_model_callback)
         rospy.Subscriber('/RL/states/reward', String, self.states_callback)
         rospy.Subscriber('/heuristic/goal/0', Heuristic, self.goal_callback)
+        rospy.Subscriber('/RL/reward/dist', Float32, self.dist_callback)
 
         # Initialize the heuristic tensor
         self.heuristic_tensor = torch.zeros(num_goals, 3)  # Initialize with zeros
@@ -183,6 +185,7 @@ class ProximalPolicyOptimization:
                     self.buffer.clear()
             else:
                 self.go = False
+                self.closest_goal = np.inf
                 self.publish_velocity([0,0,0])
                 self.reset_pub.publish("reset")
 
@@ -420,6 +423,9 @@ class ProximalPolicyOptimization:
         self.goal_dist = msg.manhattan_distance
         if msg.manhattan_distance < self.closest_goal:
             self.closest_goal = msg.manhattan_distance
+
+    def dist_callback(self, msg: Float32):
+        self.dist = msg.data
 
 
 if __name__ == '__main__':

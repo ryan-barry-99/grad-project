@@ -30,6 +30,7 @@ class Reward:
         rospy.Subscriber('/RL/heuristic/goal/closest', Heuristic, self.heuristic_callback)
         rospy.Subscriber('/RL/episode/new', Bool, self.new_episode_callback)
         rospy.Subscriber('/RL/states/reward', String, self.calc_reward)
+        rospy.Subscriber('/RL/reward/dist', Float32, self.dist_callback)
 
         self.run()
 
@@ -74,7 +75,7 @@ class Reward:
         self.rewards = {
             "hits_wall": -1,
             "reach_goal": 1,
-            "not_moving": -0.05,
+            "not_moving": 0,
             "upright": 0,
             "fell": -1,
             "moving_forward": 0,
@@ -85,8 +86,13 @@ class Reward:
             self.publishers['action_reward'].publish(reward)
             self.total_reward.data += reward
             self.publishers['total_reward'].publish(self.total_reward)
+            if msg.data == "not_moving":
+                self.publishers['action_reward'].publish(-2/(2-(self.dist)))
         if msg.data == "reach_goal" or msg.data == "stuck" or msg.data == "fell":
             self.new_episode_pub.publish(True)
+
+    def dist_callback(self, msg: Float32):
+        self.dist = msg.data
             
 
     def run(self):

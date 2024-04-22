@@ -27,6 +27,7 @@ class StateMachine:
         self.pc_pub = rospy.Publisher('velodyne_points_xyz', PointCloud, queue_size=10)
         self.pc_rs_pub = rospy.Publisher('realsense_points_xyz', PointCloud, queue_size=10)
         self.step_pub = rospy.Publisher('/RL/step', Bool, queue_size=1)
+        self.dist_pub = rospy.Publisher('/RL/reward/dist', Float32, queue_size=10)
         
         rospy.Subscriber("/cmd_vel", Twist, self.velo_callback)
 
@@ -71,8 +72,9 @@ class StateMachine:
 
                 dist = ((old_pos.x - new_pos.x)**2 + (old_pos.y - new_pos.y)**2)**(1/2)
 
-                if dist < 0.75:
+                if dist < 2:
                     self.reward_pub.publish("not_moving")
+                    self.dist_pub.publish(dist)
                     if abs(new_orient.x) < 0.1 and abs(new_orient.y) < 0.1 and len(self.poses_tracked) >= NOT_MOVING_POSES:
                         self.reward_pub.publish("upright")
 
@@ -91,7 +93,7 @@ class StateMachine:
 
                 dist = ((old_pos.x - new_pos.x)**2 + (old_pos.y - new_pos.y)**2)**(1/2)
 
-                if dist < 0.75:
+                if dist < 1:
                     self.reward_pub.publish("stuck")
                     self.poses_tracked = []
 
