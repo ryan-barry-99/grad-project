@@ -12,9 +12,10 @@ class RunsManager:
         rospy.init_node("run_manager")
 
         self.rospack = rospkg.RosPack()
-        self.rewards_folder = self.rospack.get_path('reinforcement_learning') + '/runs'
+        self.runs_folder = self.rospack.get_path('reinforcement_learning') + '/runs'
 
         self.init_rewards_dir = False
+        self.init_runs_folder = False
         self.set_runs_folder()
 
         rospy.Subscriber('/RL/episode/new', Bool, self.new_episode_callback)
@@ -43,6 +44,11 @@ class RunsManager:
                     os.mkdir(self.goal_folder)
                     self.init_rewards_dir = True
                 else:
+                    while not self.init_runs_folder:
+                        if rospy.has_param('/RL/runs/run_folder'):
+                            self.runs_folder = f"{rospy.get_param('/RL/runs/run_folder')}"
+                            self.rewards_folder = self.runs_folder + '/rewards'
+                            self.init_runs_folder = True
                     # List all folders in the directory
                     folders = os.listdir(self.rewards_folder)
 

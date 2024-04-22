@@ -1,7 +1,8 @@
 hyperparameters:
-  load_model: False
-  policy_model_path: None
-  value_model_path: None
+  load_model: True
+  run: "2024_04_21_20_30_57"
+  policy_model_path: "latest_policy.pt"
+  value_model_path: "latest_value.pt"
   optimizer: 'Adam'
   lr_policy: 0.001
   lr_value: 0.0001

@@ -6,6 +6,7 @@ from geometry_msgs.msg import PoseStamped
 from reinforcement_learning.msg import Heuristic
 from std_msgs.msg import Float32, Bool, String, Int32
 import os
+import numpy as np
 
 class Reward:
     def __init__(self):
@@ -23,6 +24,7 @@ class Reward:
 
         self.closest_heuristic = Heuristic()
         self.init_rewards_dir = False
+        self.dist = np.inf
         self.initialize_rewards()
 
 
@@ -87,7 +89,7 @@ class Reward:
             self.total_reward.data += reward
             self.publishers['total_reward'].publish(self.total_reward)
             if msg.data == "not_moving":
-                self.publishers['action_reward'].publish(-2/(2-(self.dist)))
+                self.publishers['action_reward'].publish(-2/(2-abs(self.dist)))
         if msg.data == "reach_goal" or msg.data == "stuck" or msg.data == "fell":
             self.new_episode_pub.publish(True)
 

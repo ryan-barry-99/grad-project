@@ -18,6 +18,7 @@ from rl_util import *
 from experience_buffer import ExperienceBuffer
 import torch.nn.functional as F
 import os
+import rospkg
 
 
 class ProximalPolicyOptimization:
@@ -31,6 +32,9 @@ class ProximalPolicyOptimization:
         
         # Load hyperparameters from YAML file
         self.hyperparameters = rospy.get_param('/policy_network/hyperparameters', default={})
+
+        self.rospack = rospkg.RosPack()
+        self.runs_folder = self.rospack.get_path('reinforcement_learning') + '/runs'
         
         # Check if a model should be loaded
         load_model = self.hyperparameters["load_model"]
@@ -38,9 +42,12 @@ class ProximalPolicyOptimization:
             rospy.set_param('/RL/runs/new_run', True)
         else:
             rospy.loginfo("loading model")
+            rospy.set_param('/RL/runs/run_folder', f"{self.runs_folder}/{self.hyperparameters['run']}")
             rospy.set_param('/RL/runs/new_run', False)
-            self.policy_network.load_state_dict(torch.load(self.hyperparameters['policy_model_path']))
-            self.value_network.load_state_dict(torch.load(self.hyperparameters['value_model_path']))
+            policy_model_path = f"{self.runs_folder}/models/{self.hyperparameters['policy_model_path']}"
+            value_model_path = f"{self.runs_folder}/models/{self.hyperparameters['value_model_path']}"
+            self.policy_network.load_state_dict(torch.load(policy_model_path))
+            self.value_network.load_state_dict(torch.load(value_model_path))
 
         # Check for cuda and set device
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
