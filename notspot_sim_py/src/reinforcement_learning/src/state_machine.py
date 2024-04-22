@@ -10,7 +10,7 @@ from sensor_msgs.msg import PointCloud2, PointCloud
 import numpy as np
 
 NUM_POSES_TRACKED = 60
-NOT_MOVING_POSES = 10
+NOT_MOVING_POSES = 4
 
 class StateMachine:
     def __init__(self):
@@ -72,7 +72,7 @@ class StateMachine:
 
                 dist = ((old_pos.x - new_pos.x)**2 + (old_pos.y - new_pos.y)**2)**(1/2)
 
-                if dist < 2:
+                if dist < 0.5:
                     self.reward_pub.publish("not_moving")
                     self.dist_pub.publish(dist)
                     if abs(new_orient.x) < 0.1 and abs(new_orient.y) < 0.1 and len(self.poses_tracked) >= NOT_MOVING_POSES:
@@ -93,7 +93,7 @@ class StateMachine:
 
                 dist = ((old_pos.x - new_pos.x)**2 + (old_pos.y - new_pos.y)**2)**(1/2)
 
-                if dist < 1:
+                if dist < 0.5:
                     self.reward_pub.publish("stuck")
                     self.poses_tracked = []
 

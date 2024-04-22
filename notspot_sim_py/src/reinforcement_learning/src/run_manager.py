@@ -30,12 +30,17 @@ class RunsManager:
                 if rospy.get_param('/RL/runs/new_run'):
                     c = datetime.now()
                     current_time = c.strftime('%Y_%m_%d_%H_%M_%S')
-                    self.runs_folder = f"{self.rewards_folder}/{current_time}"
+                    self.runs_folder = f"{self.runs_folder}/{current_time}"
                     os.mkdir(f"{self.runs_folder}")
                     self.rewards_folder = f"{self.runs_folder}/rewards"
                     os.mkdir(self.rewards_folder)
                     self.models_folder = f"{self.runs_folder}/models"
                     os.mkdir(self.models_folder)
+                    self.loss_folder = f"{self.models_folder}/loss"
+                    os.mkdir(self.loss_folder)
+                    os.mkdir(self.loss_folder + '/policy')
+                    os.mkdir(self.loss_folder + '/value')
+                    
                     self.steps_folder = f"{self.runs_folder}/steps"
                     os.mkdir(self.steps_folder)
                     self.distance_folder = f"{self.runs_folder}/distance"
@@ -60,6 +65,7 @@ class RunsManager:
                         self.runs_folder = self.rospack.get_path('reinforcement_learning') + '/runs/' + folders[-1]
                     self.rewards_folder = self.runs_folder + '/rewards/'
                     self.models_folder = self.runs_folder + '/models/'
+                    self.loss_folder = self.models_folder + '/loss/'
                     self.steps_folder = self.runs_folder + '/steps/'
                     self.goal_folder = self.runs_folder + '/goal/'
                     self.distance_folder = self.runs_folder + '/distance/'
@@ -68,6 +74,7 @@ class RunsManager:
                 rospy.set_param('/RL/runs/runs_folder', self.runs_folder)
                 rospy.set_param('/RL/runs/rewards_folder', self.rewards_folder)
                 rospy.set_param('/RL/runs/models_folder', self.models_folder)
+                rospy.set_param('/RL/runs/loss_folder', self.loss_folder)
                 rospy.set_param('/RL/runs/steps_folder', self.steps_folder)
                 rospy.set_param('/RL/runs/goals_folder', self.goal_folder)
                 rospy.set_param('/RL/runs/distance_folder', self.distance_folder)

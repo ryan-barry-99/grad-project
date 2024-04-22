@@ -34,7 +34,7 @@ class ProximalPolicyOptimization:
         self.hyperparameters = rospy.get_param('/policy_network/hyperparameters', default={})
 
         self.rospack = rospkg.RosPack()
-        self.runs_folder = self.rospack.get_path('reinforcement_learning') + '/runs'
+        self.runs_folder = self.rospack.get_path('reinforcement_learning') + '/runs/' + self.hyperparameters['run']
         
         # Check if a model should be loaded
         load_model = self.hyperparameters["load_model"]
@@ -42,12 +42,19 @@ class ProximalPolicyOptimization:
             rospy.set_param('/RL/runs/new_run', True)
         else:
             rospy.loginfo("loading model")
-            rospy.set_param('/RL/runs/run_folder', f"{self.runs_folder}/{self.hyperparameters['run']}")
+            rospy.set_param('/RL/runs/run_folder', f"{self.runs_folder}")
             rospy.set_param('/RL/runs/new_run', False)
             policy_model_path = f"{self.runs_folder}/models/{self.hyperparameters['policy_model_path']}"
             value_model_path = f"{self.runs_folder}/models/{self.hyperparameters['value_model_path']}"
             self.policy_network.load_state_dict(torch.load(policy_model_path))
             self.value_network.load_state_dict(torch.load(value_model_path))
+
+        got_loss_folder = False
+        while not got_loss_folder:
+            if rospy.has_param('/RL/runs/loss_folder'):
+                self.loss_folder = rospy.get_param('/RL/runs/loss_folder')
+                self.num_updates = int(len(os.listdir(self.loss_folder))/2)
+                got_loss_folder = True
 
         # Check for cuda and set device
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -56,7 +63,8 @@ class ProximalPolicyOptimization:
         self.policy_optimizer = set_optimizer(
             model=self.policy_network, 
             optimizer=self.hyperparameters["optimizer"],
-            lr=self.hyperparameters["lr_policy"]
+            lr=self.hyperparameters["lr_policy"],
+            momentum=self.hyperparameters["momentum"]
             )
         self.policy_network.to(self.device)
         
@@ -138,6 +146,8 @@ class ProximalPolicyOptimization:
                 with open(f'{self.steps_folder}/episode_{self.episode_num}.txt', 'w') as file:
                     file.write(f"{self.lifespan}")
                 with open(f'{self.goal_folder}/episode_{self.episode_num}.txt', 'w') as file:
+                    if self.ending_goal < self.closest_goal:
+                        self.closest_goal = self.ending_goal
                     file.write(f"{self.closest_goal}\n{self.ending_goal}")
                 with open(f'{self.distance_folder}/episode_{self.episode_num}.txt', 'w') as file:
                     file.write(f"{self.total_distance_traveled}")
@@ -182,7 +192,7 @@ class ProximalPolicyOptimization:
                 
                 value = self.value(self.experiences, velocity_vector).tolist()
                 self.buffer.store(state=self.experiences, action=velocity_vector, reward=self.rewards, log_prob = self.log_probs, value=value)
-                
+                self.rewards=0
                 
                 velocity_vector = velocity_vector.to('cpu').squeeze().tolist()
                 self.publish_velocity(velocity_vector)
@@ -280,6 +290,14 @@ class ProximalPolicyOptimization:
         
         policy_loss = self.compute_policy_loss(old_log_probs=old_log_probs, new_log_probs=new_log_probs, advantages=advantages)
         value_loss = self.compute_value_loss(values=values, rewards=rewards)
+
+        with open(f'{self.loss_folder}/policy/loss_{self.num_updates}.txt', 'w') as f:
+            f.write(f"{policy_loss}")
+
+        with open(f'{self.loss_folder}/value/loss_{self.num_updates}.txt', 'w') as f:
+            f.write(f"{value_loss}")
+        
+        self.num_updates += 1
 
         # Backpropagation and optimization for policy network
         self.policy_optimizer.zero_grad()

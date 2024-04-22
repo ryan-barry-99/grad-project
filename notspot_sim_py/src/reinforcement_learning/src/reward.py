@@ -76,10 +76,10 @@ class Reward:
     def calc_reward(self, msg: String):
         self.rewards = {
             "hits_wall": -1,
-            "reach_goal": 1,
+            "reach_goal": 10,
             "not_moving": 0,
             "upright": 0,
-            "fell": -1,
+            "fell": -100,
             "moving_forward": 0,
             "moving_backward": 0
         }
@@ -89,7 +89,16 @@ class Reward:
             self.total_reward.data += reward
             self.publishers['total_reward'].publish(self.total_reward)
             if msg.data == "not_moving":
-                self.publishers['action_reward'].publish(-2/(2-abs(self.dist)))
+                distance_threshold = 0.5 # Threshold for minimum distance moved
+                max_penalty = -1.0  # Maximum penalty value
+
+                # Calculate the penalty based on the distance moved
+                penalty = -distance_threshold / max(distance_threshold - abs(self.dist), 0.001)  # Ensure non-zero denominator
+
+                # Clip the penalty to ensure it does not exceed the maximum penalty
+                penalty = min(penalty, max_penalty)
+                penalty /= 2
+                self.publishers['action_reward'].publish(penalty)
         if msg.data == "reach_goal" or msg.data == "stuck" or msg.data == "fell":
             self.new_episode_pub.publish(True)
 

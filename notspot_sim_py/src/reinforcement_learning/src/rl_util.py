@@ -22,7 +22,7 @@ def ros_image_to_pytorch_tensor(image_msg):
 
 
 
-def set_optimizer(model, optimizer, lr):
+def set_optimizer(model, optimizer, lr, momentum=0):
 
     # Dictionary mapping optimizer names to optimizer classes
     optimizer_mapping = {
@@ -39,7 +39,10 @@ def set_optimizer(model, optimizer, lr):
 
     if optimizer in optimizer_mapping:
         optimizer_class = optimizer_mapping[optimizer]
-        optimizer = optimizer_class(model.parameters(), lr=lr)
+        if optimizer == "RMSprop":
+            optimizer = optimizer_class(model.parameters(), lr=lr, momentum=momentum)
+        else:
+            optimizer = optimizer_class(model.parameters(), lr=lr)
     else:
         raise ValueError(f'Unsupported optimizer: {optimizer}')
     return optimizer

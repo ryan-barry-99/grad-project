@@ -12,7 +12,7 @@ class CNN_Branch(nn.Module):
         self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding=1)
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1)
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.fc = nn.Linear(64 * (dim1 // 8) * (dim2 // 8), 16)  # Assuming 3 maxpool layers with kernel_size=2 and stride=2
+        self.fc = nn.Linear(64 * (dim1 // 8) * (dim2 // 8), 256)  # Assuming 3 maxpool layers with kernel_size=2 and stride=2
 
     def forward(self, x):
         x = torch.relu(self.conv1(x))
@@ -29,9 +29,9 @@ class DenseNetwork(nn.Module):
     def __init__(self, input_size):
         super(DenseNetwork, self).__init__()
         # Define the layers of the dense network
-        self.fc1 = nn.Linear(input_size, 64)
-        self.fc2 = nn.Linear(64, 32)
-        self.fc3 = nn.Linear(32, 16)
+        self.fc1 = nn.Linear(input_size, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 32)
 
     def forward(self, fused_observation: tuple):
         # Concatenate the output tensors from the CNN branches with other tensors
@@ -50,21 +50,13 @@ MAX_X_VEL = 2.5
 MAX_Y_VEL = 0.5
 MAX_Z_VEL = 0.3
 
-class PolicyNetwork(nn.Module):
+class StateExtractionNet(nn.Module):
     def __init__(self):
-        super(PolicyNetwork, self).__init__()
-        # Initialize CNN branches with appropriate input channels
+        super(StateExtractionNet, self).__init__()
         self.rgb_branch = CNN_Branch(in_channels=3, dim1=480, dim2=640)  # RGB image
         self.depth_branch = CNN_Branch(in_channels=1, dim1=720, dim2=1280)  # Depth image
         self.grid_branch = CNN_Branch(in_channels=1, dim1=100, dim2=100)  # Grid image
-        self.fusion_net = DenseNetwork(63)
-
-        self.sign_layer = nn.Linear(16,8)
-
-        self.fc_final_mean = nn.Linear(8, 3)
-        self.fc_final_log_std = nn.Linear(8, 3)
-        
-
+        self.fusion_net = DenseNetwork(783)
 
     def forward(self, state):
         # rgb, depth, grid, heuristic, position, orientation, ang_vel, lin_acc
@@ -82,6 +74,28 @@ class PolicyNetwork(nn.Module):
             state["ang_vel"],
             state["lin_acc"]
             ))
+
+        return x
+
+stateExtractor = StateExtractionNet()
+
+
+class PolicyNetwork(nn.Module):
+    def __init__(self, extractor=stateExtractor):
+        super(PolicyNetwork, self).__init__()
+        # Initialize CNN branches with appropriate input channels
+        self.extractor = extractor
+
+        self.sign_layer = nn.Linear(32,16)
+
+        self.fc_final_mean = nn.Linear(16, 3)
+        self.fc_final_log_std = nn.Linear(16, 3)
+        
+
+
+    def forward(self, state):
+        # rgb, depth, grid, heuristic, position, orientation, ang_vel, lin_acc
+        x = self.extractor(state)
 
         x = self.sign_layer(x)
 
@@ -102,36 +116,20 @@ class PolicyNetwork(nn.Module):
 
 
 class ValueNetwork(nn.Module):
-    def __init__(self):
+    def __init__(self, extractor=stateExtractor):
         super(ValueNetwork, self).__init__()
         # Initialize CNN branches with appropriate input channels
-        self.rgb_branch = CNN_Branch(in_channels=3, dim1=480, dim2=640)  # RGB image
-        self.depth_branch = CNN_Branch(in_channels=1, dim1=720, dim2=1280)  # Depth image
-        self.grid_branch = CNN_Branch(in_channels=1, dim1=100, dim2=100)  # Grid image
-        self.fusion_net = DenseNetwork(66)
+        self.extractor = extractor
 
-        self.sign_layer = nn.Linear(16,8)
+        self.sign_layer = nn.Linear(35,16)
 
-        self.fc_final_value = nn.Linear(8, 1)  # Output a single value for state value
+        self.fc_final_value = nn.Linear(16, 1)  # Output a single value for state value
 
     def forward(self, state, action):
         # Forward pass through CNN branches
-        rgb_out = self.rgb_branch(state["rgb"])
-        depth_out = self.depth_branch(state["depth"])
-        grid_out = self.grid_branch(state["occupancy_grid"])
+        x = self.extractor(state)
 
-        # Forward pass through fusion network
-        x = self.fusion_net((
-            rgb_out,
-            depth_out,
-            grid_out,
-            state["heuristic"],
-            state["position"],
-            state["orientation"],
-            state["ang_vel"],
-            state["lin_acc"],
-            action
-        ))
+        x = torch.cat((x, action), dim=1)
 
         x = self.sign_layer(x)
 
