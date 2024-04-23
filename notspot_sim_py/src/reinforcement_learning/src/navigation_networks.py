@@ -29,9 +29,10 @@ class DenseNetwork(nn.Module):
     def __init__(self, input_size):
         super(DenseNetwork, self).__init__()
         # Define the layers of the dense network
-        self.fc1 = nn.Linear(input_size, 128)
-        self.fc2 = nn.Linear(128, 64)
-        self.fc3 = nn.Linear(64, 32)
+        self.fc1 = nn.Linear(input_size, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.fc3 = nn.Linear(128, 64)
+        self.fc4 = nn.Linear(64, 32)
 
     def forward(self, fused_observation: tuple):
         # Concatenate the output tensors from the CNN branches with other tensors
@@ -39,7 +40,8 @@ class DenseNetwork(nn.Module):
         # Pass through dense layers
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = F.tanh(self.fc3(x))
+        x = F.relu(self.fc3(x))
+        x = F.tanh(self.fc4(x))
         return x
 
     

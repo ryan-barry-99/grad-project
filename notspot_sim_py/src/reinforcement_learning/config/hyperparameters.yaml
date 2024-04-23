@@ -1,5 +1,5 @@
 hyperparameters:
-  load_model: True
+  load_model: False
   run: "2024_04_23_02_20_27"
   policy_model_path: "latest_policy.pt"
   value_model_path: "latest_value.pt"
