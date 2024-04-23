@@ -24,6 +24,7 @@ class Reward:
 
         self.closest_heuristic = Heuristic()
         self.init_rewards_dir = False
+        self.upright = False
         self.dist = np.inf
         self.initialize_rewards()
 
@@ -33,6 +34,8 @@ class Reward:
         rospy.Subscriber('/RL/episode/new', Bool, self.new_episode_callback)
         rospy.Subscriber('/RL/states/reward', String, self.calc_reward)
         rospy.Subscriber('/RL/reward/dist', Float32, self.dist_callback)
+        rospy.Subscriber('/RL/step', Bool, self.step_callback)
+
 
         self.run()
 
@@ -79,25 +82,29 @@ class Reward:
             "reach_goal": 1,
             "not_moving": 0,
             "upright": 0,
-            "fell": -1,
-            "moving_forward": 0.01,
-            "moving_backward": -0.001
+            "fell": -10,
+            "moving_forward": 0,
+            "moving_backward": 0
         }
         if msg.data in self.rewards.keys():
             reward = self.rewards[msg.data]
             self.publishers['action_reward'].publish(reward)
             self.total_reward.data += reward
             self.publishers['total_reward'].publish(self.total_reward)
+            if msg.data == "upright":
+                self.upright = True
             if msg.data == "not_moving":
                 distance_threshold = 0.75 # Threshold for minimum distance moved
                 max_penalty = -1.0  # Maximum penalty value
 
                 # Calculate the penalty based on the distance moved
                 penalty = -distance_threshold / max(distance_threshold - abs(self.dist), 0.001)  # Ensure non-zero denominator
-
+                
                 # Clip the penalty to ensure it does not exceed the maximum penalty
-                penalty = min(penalty, max_penalty)
-                penalty /= 200
+                penalty = min(penalty, max_penalty)/10
+
+                if self.upright:
+                    penalty /= 2
                 self.publishers['action_reward'].publish(penalty)
         if msg.data == "reach_goal" or msg.data == "stuck" or msg.data == "fell":
             self.new_episode_pub.publish(True)
@@ -106,6 +113,8 @@ class Reward:
         self.dist = msg.data
             
 
+    def step_callback(self, msg):
+        self.upright = False
     def run(self):
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():

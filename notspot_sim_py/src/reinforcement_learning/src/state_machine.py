@@ -24,15 +24,17 @@ class StateMachine:
 
         rospy.Subscriber('/gazebo/model_poses/robot/notspot', PoseStamped, self.robot_pose_callback)
         self.init_pos = None
-        self.min_start_dist = 0
+        self.max_start_dist = 0
 
         self.timer = rospy.Timer(rospy.Duration(0.75), self.timer_callback, reset=True)
         self.pc_pub = rospy.Publisher('velodyne_points_xyz', PointCloud, queue_size=10)
         self.pc_rs_pub = rospy.Publisher('realsense_points_xyz', PointCloud, queue_size=10)
         self.step_pub = rospy.Publisher('/RL/step', Bool, queue_size=1)
         self.dist_pub = rospy.Publisher('/RL/reward/dist', Float32, queue_size=10)
+        self.start_dist_pub = rospy.Publisher('RL/reward/start_dist', Float32, queue_size=10)
         
         rospy.Subscriber("/cmd_vel", Twist, self.velo_callback)
+        rospy.Subscriber('/RL/episode/new', Bool, self.new_episode_callback)
 
         self.poses_tracked = []
         self.newStep = False
@@ -46,7 +48,6 @@ class StateMachine:
         self.step_pub.publish(True)
         self.newStep = True
         self.checking = True
-        self.min_start_dist = 0
         self.init_goal_dist = None
         self.check_movement()
 
@@ -82,10 +83,10 @@ class StateMachine:
                 dist = self.calc_dist(old_pos, new_pos)
 
                 if dist < 0.75:
-                    self.reward_pub.publish("not_moving")
                     self.dist_pub.publish(dist)
                     if abs(new_orient.x) < 0.1 and abs(new_orient.y) < 0.1 and len(self.poses_tracked) >= NOT_MOVING_POSES:
                         self.reward_pub.publish("upright")
+                    self.reward_pub.publish("not_moving")
 
                 if abs(new_orient.x) > 0.15 or abs(new_orient.y) > 0.15:
                     self.reward_pub.publish("fell")
@@ -93,9 +94,11 @@ class StateMachine:
                 old_pos = self.poses_tracked[-2].pose.position
                 dist = self.calc_dist(old_pos, new_pos)
                 start_dist = self.calc_manhattan_dist(self.init_pos, new_pos)
-                if  start_dist > self.min_start_dist and self.init_goal_dist is not None and start_dist < self.init_goal_dist:
-                    self.min_start_dist = start_dist
-                    self.reward_pub.publish("moving_forwards")
+                if  start_dist > self.max_start_dist:
+                    self.max_start_dist = start_dist
+                    if self.init_goal_dist is not None and start_dist < self.init_goal_dist:
+                        self.reward_pub.publish("moving_forwards")
+                self.start_dist_pub.publish(self.max_start_dist)
 
                 if self.velo.linear.x <= 0 or dist <= 0.05:
                     self.reward_pub.publish("moving_backwards")
@@ -111,6 +114,9 @@ class StateMachine:
 
 
             self.checking = False
+
+    def new_episode_callback(self, msg):
+        self.max_start_dist = 0
 
 
     def calc_dist(self, pos1, pos2):

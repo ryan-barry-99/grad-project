@@ -102,8 +102,11 @@ class ProximalPolicyOptimization:
         self.go = False
         self.dist = np.inf
         self.closest_goal = np.inf
+        self.furthest_goal = 0
         self.goal_dist = np.inf
         self.ending_goal = np.inf
+        self.max_start_dist = 0
+        self.starting_distance = 0
         self.initialize_episodes()
         self.experiences = {}
         self.buffer = ExperienceBuffer(
@@ -128,6 +131,7 @@ class ProximalPolicyOptimization:
         rospy.Subscriber('/RL/states/reward', String, self.states_callback)
         rospy.Subscriber('/heuristic/goal/0', Heuristic, self.goal_callback)
         rospy.Subscriber('/RL/reward/dist', Float32, self.dist_callback)
+        rospy.Subscriber('RL/reward/start_dist', Float32, self.start_dist_callback)
 
         # Initialize the heuristic tensor
         self.heuristic_tensor = torch.zeros(num_goals, 3)  # Initialize with zeros
@@ -148,10 +152,13 @@ class ProximalPolicyOptimization:
                 with open(f'{self.goal_folder}/episode_{self.episode_num}.txt', 'w') as file:
                     if self.ending_goal < self.closest_goal:
                         self.closest_goal = self.ending_goal
-                    file.write(f"{self.closest_goal}\n{self.ending_goal}")
+                    if self.ending_goal > self.furthest_goal:
+                        self.furthest_goal = self.ending_goal
+                    file.write(f"{self.closest_goal}\n{self.furthest_goal}\n{self.ending_goal}")
                 with open(f'{self.distance_folder}/episode_{self.episode_num}.txt', 'w') as file:
-                    file.write(f"{self.total_distance_traveled}")
+                    file.write(f"{self.total_distance_traveled}\n{self.starting_distance}")
                     self.total_distance_traveled = 0
+                    self.starting_distance = 0
                 self.episode_num += 1
                 rospy.loginfo(f"Starting episode {self.episode_num}")
                 if self.buffer.length >= 1:
@@ -169,7 +176,8 @@ class ProximalPolicyOptimization:
                         save_model(self.value_network, f"{self.models_folder}/latest_value.pt")
                 self.new_episode = False       
             self.steps_since_update += 1
-            if self.steps_since_update >= 4:  
+            if self.steps_since_update >= 4: 
+                self.starting_distance = self.max_start_dist 
                 self.go = True
                 self.ending_goal = self.goal_dist
                 if self.steps_since_update == 4:
@@ -203,6 +211,7 @@ class ProximalPolicyOptimization:
             else:
                 self.go = False
                 self.closest_goal = np.inf
+                self.furthest_goal = 0
                 self.publish_velocity([0,0,0])
                 self.reset_pub.publish("reset")
 
@@ -272,25 +281,34 @@ class ProximalPolicyOptimization:
         return velocity_vector, log_probs
     
     def advantage(self, rewards: list, values: list):
-        """
-        Compute advantages for each timestep in the trajectory.
-        
-        Args:
-        - rewards (list): List/array of actual rewards obtained.
-        - values (list): List/array of predicted values estimated by the Critic network.
-        
-        Returns:
-        - advantages (numpy array): Array of advantages for each timestep.
-        """
-        return np.array(rewards) - np.array(values)
+        T = len(rewards)
+        values = np.array(values)
+        advantages = np.zeros(T)
+        gamma = self.hyperparameters['gamma']
+        lambda_ = self.hyperparameters['lambda']
+
+        # Iterate over time steps in reverse order
+        for t in reversed(range(T)):
+            if t == T - 1:
+                delta_t = rewards[t] - values[t]  # No future rewards beyond this point
+            else:
+                delta_t = rewards[t] + gamma * values[t+1] - values[t]  # Temporal difference error
+
+            # Update temporal difference error using discounted future rewards
+            for i in range(t+1, T):
+                delta_t += (gamma * lambda_)**(i - t) * (rewards[i] - values[i-1])
+
+            advantages[t] = delta_t
+
+        return advantages
     
     def update_networks(self, batch_size=None):
         _, _, rewards, old_log_probs, new_log_probs, values = self.buffer.get_batch(batch_size)
         advantages = self.advantage(rewards=rewards, values=values)
         
-        policy_loss = self.compute_policy_loss(old_log_probs=old_log_probs, new_log_probs=new_log_probs, advantages=advantages)
-        value_loss = self.compute_value_loss(values=values, rewards=rewards)
-
+        # policy_loss = self.compute_policy_loss(old_log_probs=old_log_probs, new_log_probs=new_log_probs, advantages=advantages)
+        # value_loss = self.compute_value_loss(values=values, rewards=rewards)
+        policy_loss, value_loss = self.compute_loss(old_log_probs, new_log_probs, advantages, values, rewards)
         with open(f'{self.loss_folder}/policy/loss_{self.num_updates}.txt', 'w') as f:
             f.write(f"{policy_loss}")
 
@@ -304,11 +322,47 @@ class ProximalPolicyOptimization:
         policy_loss.backward()
         self.policy_optimizer.step()
 
+
+        policy_loss, value_loss = self.compute_loss(old_log_probs, new_log_probs, advantages, values, rewards)
+
         # Backpropagation and optimization for value network
         self.value_optimizer.zero_grad()
-        value_loss.backward()
+        value_loss.backward(retain_graph=True)
         self.value_optimizer.step()
 
+
+    def compute_loss(self, old_log_probs, new_log_probs, advantages, values, rewards):
+        old_log_probs = torch.tensor(old_log_probs)
+        new_log_probs = torch.tensor(new_log_probs)
+        clip_epsilon = self.hyperparameters["ppo_clip"]
+        clip_c1 = self.hyperparameters["clip_c1"]
+        clip_c2 = self.hyperparameters["clip_c2"]
+        gamma = self.hyperparameters["gamma"]
+
+        # Compute policy loss
+        ratio = torch.exp(new_log_probs - old_log_probs)
+        surr1 = ratio * advantages
+        surr2 = (torch.clamp(ratio, 1.0 - clip_epsilon, 1.0 + clip_epsilon) * advantages).requires_grad_(True)
+        policy_loss = -torch.min(surr1, surr2).mean()
+
+        # Compute value loss
+        discounted_rewards = []
+        running_reward = 0
+        for reward in reversed(rewards):
+            running_reward = reward + gamma * running_reward
+            discounted_rewards.insert(0, running_reward)
+
+        values = torch.tensor(values, requires_grad=True).reshape(-1)  # Reshape to match discounted_rewards
+        discounted_rewards = torch.tensor(discounted_rewards, requires_grad=True)
+        value_loss = F.mse_loss(values, discounted_rewards)
+
+        # Compute entropy regularization term
+        entropy = -(new_log_probs.exp() * new_log_probs).sum(dim=-1).mean()  # Compute entropy of the action distribution
+
+        # Combine policy and value losses with entropy regularization
+        combined_loss = policy_loss - clip_c1 * value_loss + clip_c2 * entropy
+
+        return combined_loss, value_loss
 
     def compute_policy_loss(self, old_log_probs, new_log_probs, advantages):
         old_log_probs = torch.tensor(old_log_probs)
@@ -407,7 +461,7 @@ class ProximalPolicyOptimization:
         
         # Update the old position with the current position
         self.old_position = position
-        self.position_tensor = torch.tensor([[position.x, position.y, distance_traveled]])
+        self.position_tensor = torch.tensor([[position.x, position.y, distance_traveled, self.max_start_dist]])
 
     def calculate_distance(self, pos1, pos2):
         distance = ((pos2.x - pos1.x) ** 2 + (pos2.y - pos1.y) ** 2) ** 0.5
@@ -440,7 +494,6 @@ class ProximalPolicyOptimization:
         self.velo_pub.publish(Twist())
         self.new_episode = True
         self.steps_since_update = 0
-        
 
     def save_model_callback(self, msg: String):
         save_model(self.policy_network, f"{self.models_folder}/policy_{msg.data}")
@@ -450,9 +503,14 @@ class ProximalPolicyOptimization:
         self.goal_dist = msg.manhattan_distance
         if msg.manhattan_distance < self.closest_goal:
             self.closest_goal = msg.manhattan_distance
+        if msg.manhattan_distance > self.furthest_goal:
+            self.furthest_goal = msg.manhattan_distance
 
     def dist_callback(self, msg: Float32):
         self.dist = msg.data
+
+    def start_dist_callback(self, msg: Float32):
+        self.max_start_dist = msg.data
 
 
 if __name__ == '__main__':
