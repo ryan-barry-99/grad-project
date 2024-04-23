@@ -11,8 +11,9 @@ class CNN_Branch(nn.Module):
         self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=16, kernel_size=3, stride=1, padding=1)
         self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding=1)
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1)
+        self.conv4 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1)
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.fc = nn.Linear(64 * (dim1 // 8) * (dim2 // 8), 256)  # Assuming 3 maxpool layers with kernel_size=2 and stride=2
+        self.fc = nn.Linear(128 * (dim1 // 8) * (dim2 // 8), 256)  # Assuming 3 maxpool layers with kernel_size=2 and stride=2
 
     def forward(self, x):
         x = torch.relu(self.conv1(x))
@@ -21,7 +22,8 @@ class CNN_Branch(nn.Module):
         x = self.pool(x)
         x = torch.relu(self.conv3(x))
         x = self.pool(x)
-        x = x.view(1, 64 * (self.dim1 // 8) * (self.dim2 // 8))  # Flatten before fully connected layer
+        x = torch.relu(self.conv4(x))
+        x = x.view(1, 128 * (self.dim1 // 8) * (self.dim2 // 8))  # Flatten before fully connected layer
         x = self.fc(x)
         return x
     
@@ -124,27 +126,3 @@ class PolicyNetwork(nn.Module):
 
         return mean, std, value
     
-
-
-class ValueNetwork(nn.Module):
-    def __init__(self, extractor=stateExtractor):
-        super(ValueNetwork, self).__init__()
-        # Initialize CNN branches with appropriate input channels
-        self.extractor = extractor
-
-        self.sign_layer = nn.Linear(35,16)
-
-        self.fc_final_value = nn.Linear(16, 1)  # Output a single value for state value
-
-    def forward(self, state, action):
-        # Forward pass through CNN branches
-        x = self.extractor(state)
-
-        x = torch.cat((x, action), dim=1)
-
-        x = self.sign_layer(x)
-
-        # Output the state value
-        value = self.fc_final_value(x)
-
-        return value
