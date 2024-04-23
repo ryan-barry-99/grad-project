@@ -94,7 +94,7 @@ class Reward:
             if msg.data == "upright":
                 self.upright = True
             if msg.data == "not_moving":
-                distance_threshold = 0.75 # Threshold for minimum distance moved
+                distance_threshold = 2 # Threshold for minimum distance moved
                 max_penalty = -1.0  # Maximum penalty value
 
                 # Calculate the penalty based on the distance moved

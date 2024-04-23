@@ -82,7 +82,7 @@ class StateMachine:
 
                 dist = self.calc_dist(old_pos, new_pos)
 
-                if dist < 0.75:
+                if dist < 2:
                     self.dist_pub.publish(dist)
                     if abs(new_orient.x) < 0.1 and abs(new_orient.y) < 0.1 and len(self.poses_tracked) >= NOT_MOVING_POSES:
                         self.reward_pub.publish("upright")
@@ -108,7 +108,7 @@ class StateMachine:
 
                 dist = self.calc_dist(old_pos, new_pos)
 
-                if dist < 0.5:
+                if dist < 0.25:
                     self.reward_pub.publish("stuck")
                     self.poses_tracked = []
 
