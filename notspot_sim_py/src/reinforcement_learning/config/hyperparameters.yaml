@@ -1,6 +1,6 @@
 hyperparameters:
   load_model: True
-  run: "2024_04_23_01_10_21"
+  run: "2024_04_23_02_20_27"
   policy_model_path: "latest_policy.pt"
   value_model_path: "latest_value.pt"
   optimizer: 'RMSprop'
@@ -10,7 +10,7 @@ hyperparameters:
   gamma: 0.99
   lambda: 0.99
   ppo_clip: 0.2
-  clip_c1: 0.2
+  clip_c1: 0.6
   clip_c2: 0.1
   batch_size: 16
   max_trajectory_length: 16

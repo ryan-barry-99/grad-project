@@ -86,29 +86,41 @@ class PolicyNetwork(nn.Module):
         # Initialize CNN branches with appropriate input channels
         self.extractor = extractor
 
-        self.sign_layer = nn.Linear(32,16)
+        self.dist_sign_layer1 = nn.Linear(32,16)
+        self.dist_sign_layer2 = nn.Linear(16,8)
 
-        self.fc_final_mean = nn.Linear(16, 3)
-        self.fc_final_log_std = nn.Linear(16, 3)
+        self.fc_final_mean = nn.Linear(8, 3)
+        self.fc_final_log_std = nn.Linear(8, 3)
+
+        self.value_sign_layer1 = nn.Linear(32,16)
+        self.value_sign_layer2 = nn.Linear(16,8)
+        self.fc_final_value = nn.Linear(8, 1)  # Output a single value for state value
         
 
 
     def forward(self, state):
         # rgb, depth, grid, heuristic, position, orientation, ang_vel, lin_acc
         x = self.extractor(state)
+        
 
-        x = self.sign_layer(x)
+        p = self.dist_sign_layer1(x)
+        p = self.dist_sign_layer2(p)
 
-        mean = self.fc_final_mean(x)
+        mean = self.fc_final_mean(p)
         mean[:, [0]] = torch.clamp(mean[:, [0]], min=-MAX_X_VEL, max=MAX_X_VEL)
         mean[:, [1]] = torch.clamp(mean[:, [0]], min=-MAX_Y_VEL, max=MAX_Y_VEL)
         mean[:, [2]] = torch.clamp(mean[:, [2]], min=-MAX_Z_VEL, max=MAX_Z_VEL)
 
-        log_std = self.fc_final_log_std(x)
+        log_std = self.fc_final_log_std(p)
         log_std = torch.clamp(log_std, min=LOG_SIG_MIN, max=LOG_SIG_MAX)
         std = log_std.exp()
 
-        return mean, std
+        # Output the state value
+        v = self.value_sign_layer1(x)
+        v = self.value_sign_layer2(v)
+        value = self.fc_final_value(v)
+
+        return mean, std, value
     
 
 

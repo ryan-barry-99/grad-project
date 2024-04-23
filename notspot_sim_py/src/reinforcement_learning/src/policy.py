@@ -28,7 +28,7 @@ class ProximalPolicyOptimization:
 
 
         self.policy_network = PolicyNetwork()
-        self.value_network = ValueNetwork()
+        # self.value_network = ValueNetwork()
         
         # Load hyperparameters from YAML file
         self.hyperparameters = rospy.get_param('/policy_network/hyperparameters', default={})
@@ -45,9 +45,9 @@ class ProximalPolicyOptimization:
             rospy.set_param('/RL/runs/run_folder', f"{self.runs_folder}")
             rospy.set_param('/RL/runs/new_run', False)
             policy_model_path = f"{self.runs_folder}/models/{self.hyperparameters['policy_model_path']}"
-            value_model_path = f"{self.runs_folder}/models/{self.hyperparameters['value_model_path']}"
+            # value_model_path = f"{self.runs_folder}/models/{self.hyperparameters['value_model_path']}"
             self.policy_network.load_state_dict(torch.load(policy_model_path))
-            self.value_network.load_state_dict(torch.load(value_model_path))
+            # self.value_network.load_state_dict(torch.load(value_model_path))
 
         got_loss_folder = False
         while not got_loss_folder:
@@ -68,12 +68,12 @@ class ProximalPolicyOptimization:
             )
         self.policy_network.to(self.device)
         
-        self.value_optimizer = set_optimizer(
-            model=self.value_network, 
-            optimizer=self.hyperparameters["optimizer"],
-            lr=self.hyperparameters["lr_value"]
-            )
-        self.value_network.to(self.device)
+        # self.value_optimizer = set_optimizer(
+        #     model=self.value_network, 
+        #     optimizer=self.hyperparameters["optimizer"],
+        #     lr=self.hyperparameters["lr_value"]
+        #     )
+        # self.value_network.to(self.device)
         
         # Initialize ROS publishers
         self.image_pub = rospy.Publisher("/occupancy_image", Image, queue_size=10)
@@ -170,10 +170,10 @@ class ProximalPolicyOptimization:
                         if rospy.has_param('/RL/runs/models_folder'):
                             self.models_folder = rospy.get_param('/RL/runs/models_folder')
                             save_model(self.policy_network, f"{self.models_folder}/latest_policy.pt")
-                            save_model(self.value_network, f"{self.models_folder}/latest_value.pt")
+                            # save_model(self.value_network, f"{self.models_folder}/latest_value.pt")
                     if self.models_folder is not None:
                         save_model(self.policy_network, f"{self.models_folder}/latest_policy.pt")
-                        save_model(self.value_network, f"{self.models_folder}/latest_value.pt")
+                        # save_model(self.value_network, f"{self.models_folder}/latest_value.pt")
                 self.new_episode = False       
             self.steps_since_update += 1
             if self.steps_since_update >= 4: 
@@ -194,15 +194,15 @@ class ProximalPolicyOptimization:
                         "lin_acc": self.lin_acc_tensor.to(self.device),        # 1, 3
                     }
                 
-                mean, std = self.policy(self.experiences)
+                mean, std, value = self.policy(self.experiences)
                 velocity_vector, self.log_probs = self.sample_velocity(mean, std)
                 velocity_vector = torch.tensor(self.prep_velo(velocity_vector), requires_grad=True).to(self.device).unsqueeze(0)
-                
-                value = self.value(self.experiences, velocity_vector).tolist()
+                value = value.cpu().squeeze().tolist()
+                # value = self.value(self.experiences, velocity_vector).tolist()
                 self.buffer.store(state=self.experiences, action=velocity_vector, reward=self.rewards, log_prob = self.log_probs, value=value)
                 self.rewards=0
                 
-                velocity_vector = velocity_vector.to('cpu').squeeze().tolist()
+                velocity_vector = velocity_vector.cpu().squeeze().tolist()
                 self.publish_velocity(velocity_vector)
 
                 if self.buffer.at_capacity():
@@ -227,17 +227,17 @@ class ProximalPolicyOptimization:
         """
         self.policy_network.eval() # Set model to evaluation mode
         with torch.no_grad():
-            mean, std = self.policy_network(experience)
-        return mean, std
+            mean, std, value = self.policy_network(experience)
+        return mean, std, value
     
-    def value(self, experience, action):
-        """
-        Use the value network to estimate the value of a state, action pair
-        """
-        self.value_network.eval()
-        with torch.no_grad():
-            value = self.value_network(experience, action)
-        return value
+    # def value(self, experience, action):
+    #     """
+    #     Use the value network to estimate the value of a state, action pair
+    #     """
+    #     self.value_network.eval()
+    #     with torch.no_grad():
+    #         value = self.value_network(experience, action)
+    #     return value
     
     def prep_velo(self, velocity_vector):
         # vx = -abs(velocity_vector[0][0]) + abs(velocity_vector[0][1])
@@ -323,12 +323,12 @@ class ProximalPolicyOptimization:
         self.policy_optimizer.step()
 
 
-        policy_loss, value_loss = self.compute_loss(old_log_probs, new_log_probs, advantages, values, rewards)
+        # policy_loss, value_loss = self.compute_loss(old_log_probs, new_log_probs, advantages, values, rewards)
 
-        # Backpropagation and optimization for value network
-        self.value_optimizer.zero_grad()
-        value_loss.backward(retain_graph=True)
-        self.value_optimizer.step()
+        # # Backpropagation and optimization for value network
+        # self.value_optimizer.zero_grad()
+        # value_loss.backward(retain_graph=True)
+        # self.value_optimizer.step()
 
 
     def compute_loss(self, old_log_probs, new_log_probs, advantages, values, rewards):
@@ -497,7 +497,7 @@ class ProximalPolicyOptimization:
 
     def save_model_callback(self, msg: String):
         save_model(self.policy_network, f"{self.models_folder}/policy_{msg.data}")
-        save_model(self.value_network, f"{self.models_folder}/value_{msg.data}")
+        # save_model(self.value_network, f"{self.models_folder}/value_{msg.data}")
 
     def goal_callback(self, msg: Heuristic):
         self.goal_dist = msg.manhattan_distance
