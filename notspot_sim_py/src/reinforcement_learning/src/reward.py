@@ -48,7 +48,7 @@ class Reward:
     def new_episode_callback(self, msg: Bool):
         self.new_episode = msg.data
         if self.new_episode:
-            if self.episode_num % 10 == 0:
+            if self.episode_num % 50 == 0:
                 self.save_model_pub.publish(f"episode_{self.episode_num}.pt")
             self.episode_num += 1
             self.total_reward = Float32()
@@ -83,7 +83,7 @@ class Reward:
             "not_moving": 0,
             "upright": 0,
             "fell": -10,
-            "moving_forward": 0,
+            "moving_forward": 0.1,
             "moving_backward": 0
         }
         if msg.data in self.rewards.keys():
@@ -94,17 +94,17 @@ class Reward:
             if msg.data == "upright":
                 self.upright = True
             if msg.data == "not_moving":
-                distance_threshold = 2 # Threshold for minimum distance moved
+                distance_threshold = 0.75 # Threshold for minimum distance moved
                 max_penalty = -1.0  # Maximum penalty value
 
                 # Calculate the penalty based on the distance moved
                 penalty = -distance_threshold / max(distance_threshold - abs(self.dist), 0.001)  # Ensure non-zero denominator
                 
                 # Clip the penalty to ensure it does not exceed the maximum penalty
-                penalty = min(penalty, max_penalty)/10
+                penalty = min(penalty, max_penalty)
 
                 if self.upright:
-                    penalty /= 2
+                    penalty /= 20
                 self.publishers['action_reward'].publish(penalty)
         if msg.data == "reach_goal" or msg.data == "stuck" or msg.data == "fell":
             self.new_episode_pub.publish(True)

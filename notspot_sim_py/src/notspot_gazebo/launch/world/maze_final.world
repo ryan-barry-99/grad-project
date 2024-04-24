@@ -90,7 +90,6 @@
     <model name='willowgarage'>
       <static>1</static>
       <pose>-7.1262 -9.13117 0 0 -0 0</pose>
-      <enable_collisions>true</enable_collisions>
       <link name='walls'>
         <collision name='maze_collision'>
           <geometry>
@@ -124,41 +123,42 @@
         <enable_wind>0</enable_wind>
         <kinematic>0</kinematic>
       </link>
+      <enable_collisions>1</enable_collisions>
     </model>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>14.4499 63.9816 152.791 0 1.2618 -2.1271</pose>
+        <pose>1.23249 2.47722 13.7742 0 1.4058 -1.26581</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
     </gui>
     <state world_name='default'>
-      <sim_time>11284 478000000</sim_time>
-      <real_time>190 187167544</real_time>
-      <wall_time>1712250212 92452020</wall_time>
-      <iterations>176433</iterations>
+      <sim_time>11575 23000000</sim_time>
+      <real_time>114 179683495</real_time>
+      <wall_time>1713878566 865238348</wall_time>
+      <iterations>95001</iterations>
       <model name='Construction Cone'>
-        <pose>29.5661 22.4058 -0 1e-06 -0 0</pose>
+        <pose>29.5661 22.4058 0 1e-06 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>29.5661 22.4058 -0 1e-06 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0 -0 -9.79994 1.5e-05 1e-05 0</acceleration>
-          <wrench>-0 -0 -9.79994 0 -0 0</wrench>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='Construction Cone_0'>
-        <pose>-30.1739 -27.0591 -0 0 -0 0</pose>
+        <pose>-30.1739 -27.0591 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
           <pose>-30.1739 -27.0591 -0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 -0 -0.008512 -2.58585 1.13682 3.14159</acceleration>
-          <wrench>0 -0 -0.008512 0 -0 0</wrench>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='dry_ramp_clone'>
-        <pose>3.79628 -15.819 0 0 0 -0.804929</pose>
+        <pose>3.79628 -15.8191 0 0 0 -0.804929</pose>
         <scale>1 2 1</scale>
         <link name='downward_slope'>
           <pose>4.48834 -16.5387 0.034878 -0 0.069813 -0.804929</pose>
@@ -172,7 +172,6 @@
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
-        
         <link name='upward_slope'>
           <pose>3.10422 -15.0994 0.034878 0 -0.069813 -0.804929</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -195,7 +194,6 @@
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
-        
         <link name='upward_slope'>
           <pose>-23.9454 10.3179 0.034878 0 -0.069813 -1.5723</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -204,7 +202,7 @@
         </link>
       </model>
       <model name='dry_ramp_clone_1'>
-        <pose>-19.7062 -15.2548 0 0 0 -1.56901</pose>
+        <pose>-19.7062 -15.2549 0 0 0 -1.56901</pose>
         <scale>1 2.75 1</scale>
         <link name='downward_slope'>
           <pose>-19.7044 -16.2533 0.034878 -0 0.069813 -1.56901</pose>
@@ -218,7 +216,6 @@
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
-        
         <link name='upward_slope'>
           <pose>-19.708 -14.2565 0.034878 0 -0.069813 -1.56901</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -227,7 +224,7 @@
         </link>
       </model>
       <model name='dry_ramp_clone_2'>
-        <pose>13.5862 1.22486 0 0 0 -1.5689</pose>
+        <pose>13.5862 1.22485 0 0 0 -1.5689</pose>
         <scale>1 2 1</scale>
         <link name='downward_slope'>
           <pose>13.5881 0.226443 0.034878 -0 0.069813 -1.5689</pose>
@@ -241,7 +238,6 @@
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
-        
         <link name='upward_slope'>
           <pose>13.5843 2.22326 0.034878 0 -0.069813 -1.5689</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -274,7 +270,6 @@
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
-        
         <link name='upward_slope'>
           <pose>9.74403 4.50412 0.034878 0 -0.069813 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -297,7 +292,6 @@
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
-        
         <link name='upward_slope'>
           <pose>16.1605 -4.62052 0.034878 0 -0.069813 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -320,7 +314,6 @@
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
-        
         <link name='upward_slope'>
           <pose>3.13033 -7.68633 0.034878 0 -0.069813 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -329,7 +322,7 @@
         </link>
       </model>
       <model name='icy_ramp_clone_2'>
-        <pose>-5.41534 12.0628 0.00083 0 -0 0</pose>
+        <pose>-5.41534 12.0628 0.000827 0 -0 0</pose>
         <scale>1 6.25 1</scale>
         <link name='downward_slope'>
           <pose>-4.41693 12.0628 0.035705 0 0.069813 0</pose>
@@ -343,7 +336,6 @@
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
-        
         <link name='upward_slope'>
           <pose>-6.41375 12.0628 0.035705 0 -0.069813 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -366,7 +358,6 @@
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
-        
         <link name='upward_slope'>
           <pose>11.9026 -17.8589 0.034878 0 -0.069813 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -375,7 +366,7 @@
         </link>
       </model>
       <model name='icy_ramp_clone_4'>
-        <pose>2.94266 13.578 0 0 0 -1.56363</pose>
+        <pose>2.94266 13.578 -0 0 0 -1.56363</pose>
         <scale>1 2.6 1</scale>
         <link name='downward_slope'>
           <pose>2.94981 12.5796 0.034878 -0 0.069813 -1.56363</pose>
@@ -389,7 +380,6 @@
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
-        
         <link name='upward_slope'>
           <pose>2.9355 14.5764 0.034878 0 -0.069813 -1.56363</pose>
           <velocity>0 0 0 0 -0 0</velocity>
@@ -412,12 +402,93 @@
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
-        
         <link name='upward_slope'>
           <pose>-11.8442 -11.4448 0.034878 0 -0.069813 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='notspot_gazebo'>
+        <pose>-8.7e-05 -0.000789 0.154642 0.001142 0.005069 -1.45904</pose>
+        <scale>1 1 1</scale>
+        <link name='FL1'>
+          <pose>0.050303 -0.091132 0.154204 1.56573 0.001843 -3.0299</pose>
+          <velocity>6e-06 -9e-06 -2e-06 1.5e-05 -0.000157 2.8e-05</velocity>
+          <acceleration>-0 0 0 -1.09113 -0.793025 -1.09885</acceleration>
+          <wrench>-0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='FL2'>
+          <pose>0.096911 -0.085903 0.154292 1.56768 0.956356 1.67985</pose>
+          <velocity>5e-06 -7e-06 6e-06 0.0003 -0.000126 2.9e-05</velocity>
+          <acceleration>-0 0 -0 -2.32991 -1.39307 2.35048</acceleration>
+          <wrench>-0 0 -0 0 -0 0</wrench>
+        </link>
+        <link name='FL3'>
+          <pose>0.090634 -0.028596 0.072583 -1.5714 0.76882 -1.45835</pose>
+          <velocity>1.4e-05 1.7e-05 2.2e-05 -0.000381 -0.000236 1.2e-05</velocity>
+          <acceleration>-0 0 -0 -0.240949 0.389548 -0.808544</acceleration>
+          <wrench>-0 0 -0 0 -0 0</wrench>
+        </link>
+        <link name='FR1'>
+          <pose>-0.029199 -0.100054 0.154112 1.56572 -0.007943 -3.02977</pose>
+          <velocity>6e-06 -1.1e-05 -1e-06 -1.8e-05 0.000137 2.8e-05</velocity>
+          <acceleration>-0 0 0 1.4047 -1.02067 -1.6668</acceleration>
+          <wrench>-0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='FR2'>
+          <pose>-0.075805 -0.105286 0.154485 1.58458 0.959299 1.69394</pose>
+          <velocity>6e-06 -1.2e-05 5e-06 0.000437 0.000188 2.3e-05</velocity>
+          <acceleration>0 0 -0 -1.43976 1.25345 -1.62735</acceleration>
+          <wrench>0 0 -0 0 -0 0</wrench>
+        </link>
+        <link name='FR3'>
+          <pose>-0.082856 -0.048311 0.072606 -1.5801 0.769153 -1.46612</pose>
+          <velocity>-1.1e-05 2.4e-05 3.2e-05 -0.000242 0.000145 4.6e-05</velocity>
+          <acceleration>0 -0 0 -0.76911 0.272681 2.08071</acceleration>
+          <wrench>0 -0 0 0 -0 0</wrench>
+        </link>
+        <link name='RL1'>
+          <pose>0.029024 0.098475 0.155173 1.56572 0.007497 -3.02989</pose>
+          <velocity>0 -9e-06 -2e-06 3e-06 -4.8e-05 2.8e-05</velocity>
+          <acceleration>-0 0 0 1.05786 1.41823 -0.833819</acceleration>
+          <wrench>-0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='RL2'>
+          <pose>0.07563 0.103703 0.155525 1.56102 0.699964 1.67618</pose>
+          <velocity>0 -8e-06 0 0.00045 2e-06 3.2e-05</velocity>
+          <acceleration>-0 0 0 1.26017 1.494 0.415255</acceleration>
+          <wrench>-0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='RL3'>
+          <pose>0.067585 0.179765 0.091106 -1.55501 1.10095 -1.44468</pose>
+          <velocity>-2e-06 2.1e-05 3.4e-05 -0.000243 -8.7e-05 1.5e-05</velocity>
+          <acceleration>-0 0 0 -1.8507 -1.00741 0.806061</acceleration>
+          <wrench>-0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='RR1'>
+          <pose>-0.050477 0.089553 0.155081 1.56571 -0.00182 -3.02984</pose>
+          <velocity>1e-06 -1.1e-05 -2e-06 -1.1e-05 7.2e-05 2.8e-05</velocity>
+          <acceleration>-0 0 0 0.991867 0.648871 0.71383</acceleration>
+          <wrench>-0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='RR2'>
+          <pose>-0.097084 0.084322 0.155167 1.57325 0.718675 1.68419</pose>
+          <velocity>1e-06 -1.3e-05 2e-06 0.000494 0.000128 2.7e-05</velocity>
+          <acceleration>0 0 -0 2.32664 0.071369 1.64254</acceleration>
+          <wrench>0 0 -0 0 -0 0</wrench>
+        </link>
+        <link name='RR3'>
+          <pose>-0.105599 0.159106 0.089328 -1.57268 1.06091 -1.46144</pose>
+          <velocity>-1e-05 2e-05 4e-05 -0.000183 7.3e-05 4.4e-05</velocity>
+          <acceleration>0 -0 -0 2.70106 0.915625 -2.20091</acceleration>
+          <wrench>0 -0 -0 0 -0 0</wrench>
+        </link>
+        <link name='dummy_link'>
+          <pose>-8.7e-05 -0.000789 0.154642 0.001142 0.005069 -1.45904</pose>
+          <velocity>3e-06 -1e-05 -2e-06 -3e-06 6e-06 2.8e-05</velocity>
+          <acceleration>-0 0 0 -0.013508 -0.158818 7.4e-05</acceleration>
+          <wrench>-0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='walkway_metal_straight'>
@@ -487,7 +558,6 @@
     <model name='icy_ramp_clone'>
       <static>1</static>
       <pose>10.7103 4.23574 0 0 -0 0</pose>
-      
       <link name='flat_plane'>
         <pose>0 0 0.069756 0 -0 0</pose>
         <collision name='collision'>
@@ -645,7 +715,6 @@
     <model name='icy_ramp_clone_0'>
       <static>1</static>
       <pose>16.7662 -5.28418 0 0 -0 0</pose>
-      
       <link name='flat_plane'>
         <pose>0 0 0.069756 0 -0 0</pose>
         <collision name='collision'>
@@ -803,7 +872,6 @@
     <model name='icy_ramp_clone_1'>
       <static>1</static>
       <pose>4.12874 -7.67511 0 0 -0 0</pose>
-      
       <link name='flat_plane'>
         <pose>0 0 0.069756 0 -0 0</pose>
         <collision name='collision'>
@@ -961,7 +1029,6 @@
     <model name='icy_ramp_clone_2'>
       <static>1</static>
       <pose>-4.92677 12.8905 0 0 -0 0</pose>
-      
       <link name='flat_plane'>
         <pose>0 0 0.069756 0 -0 0</pose>
         <collision name='collision'>
@@ -1119,7 +1186,6 @@
     <model name='icy_ramp_clone_3'>
       <static>1</static>
       <pose>13.2435 -18.0165 0 0 -0 0</pose>
-      
       <link name='flat_plane'>
         <pose>0 0 0.069756 0 -0 0</pose>
         <collision name='collision'>
@@ -1277,7 +1343,6 @@
     <model name='dry_ramp_clone'>
       <static>1</static>
       <pose>4.1248 -16.0075 0 0 -0 0</pose>
-      
       <link name='flat_plane'>
         <pose>0 0 0.069756 0 -0 0</pose>
         <collision name='collision'>
@@ -1417,7 +1482,6 @@
     <model name='dry_ramp_clone_0'>
       <static>1</static>
       <pose>-23.9469 9.31953 0 0 -0 0</pose>
-      
       <link name='flat_plane'>
         <pose>0 0 0.069756 0 -0 0</pose>
         <collision name='collision'>
@@ -1557,7 +1621,6 @@
     <model name='icy_ramp_clone_4'>
       <static>1</static>
       <pose>3.19283 13.5827 0 0 -0 0</pose>
-      
       <link name='flat_plane'>
         <pose>0 0 0.069756 0 -0 0</pose>
         <collision name='collision'>
@@ -1715,7 +1778,6 @@
     <model name='dry_ramp_clone_2'>
       <static>1</static>
       <pose>13.8823 2.35262 0 0 -0 0</pose>
-      
       <link name='flat_plane'>
         <pose>0 0 0.069756 0 -0 0</pose>
         <collision name='collision'>
@@ -1855,7 +1917,6 @@
     <model name='icy_ramp_clone_6'>
       <static>1</static>
       <pose>-10.8458 -11.4448 0 0 -0 0</pose>
-      
       <link name='flat_plane'>
         <pose>0 0 0.069756 0 -0 0</pose>
         <collision name='collision'>
@@ -2013,7 +2074,6 @@
     <model name='dry_ramp_clone_1'>
       <static>1</static>
       <pose>-19.7136 -15.2549 0 0 -0 0</pose>
-      
       <link name='flat_plane'>
         <pose>0 0 0.069756 0 -0 0</pose>
         <collision name='collision'>
@@ -2439,6 +2499,1162 @@
         <kinematic>0</kinematic>
       </link>
       <pose>-30 -27 0 0 -0 0</pose>
+    </model>
+    <model name='notspot_gazebo'>
+      <link name='dummy_link'>
+        <inertial>
+          <pose>-0.00048 9.1e-05 0.000234 0 -0 0</pose>
+          <mass>0.81776</mass>
+          <inertia>
+            <ixx>0.00058474</ixx>
+            <ixy>-1.0045e-06</ixy>
+            <ixz>1.0886e-08</ixz>
+            <iyy>0.00029699</iyy>
+            <iyz>3.2027e-08</iyz>
+            <izz>0.00063853</izz>
+          </inertia>
+        </inertial>
+        <collision name='dummy_link_fixed_joint_lump__base_link_collision'>
+          <pose>0 0 0 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.25 0.1285 0.055</size>
+            </box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <collision name='dummy_link_fixed_joint_lump__realsense_link_collision_1'>
+          <pose>0.13 0 0.0125 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.02505 0.09 0.025</size>
+            </box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <kp>1e+13</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+            <friction>
+              <ode>
+                <mu2>1</mu2>
+                <fdir1>0 0 0</fdir1>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <collision name='dummy_link_fixed_joint_lump__velodyne_base_link_collision_2'>
+          <pose>0 0 0.06085 0 -0 0</pose>
+          <geometry>
+            <cylinder>
+              <length>0.0717</length>
+              <radius>0.0516</radius>
+            </cylinder>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='dummy_link_visual'>
+          <pose>0 0 0 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.001 0.001 0.001</size>
+            </box>
+          </geometry>
+        </visual>
+        <visual name='dummy_link_fixed_joint_lump__base_link_visual_1'>
+          <pose>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/notspot_sim_py/src/notspot_description/meshes/body_obj.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <visual name='dummy_link_fixed_joint_lump__realsense_link_visual_2'>
+          <pose>0.1449 0 0.0125 1.5708 -0 1.5708</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/realsense2_description/meshes/d435.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <visual name='dummy_link_fixed_joint_lump__velodyne_base_link_visual_3'>
+          <pose>0 0 0.025 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/velodyne_simulator/velodyne_description/meshes/VLP16_base_1.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <visual name='dummy_link_fixed_joint_lump__velodyne_base_link_visual_4'>
+          <pose>0 0 0.025 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/velodyne_simulator/velodyne_description/meshes/VLP16_base_2.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <visual name='dummy_link_fixed_joint_lump__velodyne_visual_5'>
+          <pose>0 0 0.025 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/velodyne_simulator/velodyne_description/meshes/VLP16_scan.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <gravity>1</gravity>
+        <sensor name='imu_sensor' type='imu'>
+          <always_on>1</always_on>
+          <update_rate>100</update_rate>
+          <visualize>1</visualize>
+          <topic>__default_topic__</topic>
+          <plugin name='imu_plugin' filename='libgazebo_ros_imu_sensor.so'>
+            <topicName>notspot_imu/base_link_orientation</topicName>
+            <bodyName>imu_link</bodyName>
+            <updateRateHZ>15.0</updateRateHZ>
+            <gaussianNoise>0.0</gaussianNoise>
+            <xyzOffset>0 0 0</xyzOffset>
+            <rpyOffset>0 0 0</rpyOffset>
+            <frameName>base_link</frameName>
+            <initialOrientationAsReference>0</initialOrientationAsReference>
+            <robotNamespace>/</robotNamespace>
+          </plugin>
+          <pose>0 0 0 0 -0 0</pose>
+          <imu/>
+        </sensor>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+        <gravity>1</gravity>
+        <sensor name='realsensecolor' type='camera'>
+          <camera name='realsense'>
+            <horizontal_fov>1.21126</horizontal_fov>
+            <image>
+              <width>640</width>
+              <height>480</height>
+              <format>RGB_INT8</format>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>100</far>
+            </clip>
+            <noise>
+              <type>gaussian</type>
+              <mean>0</mean>
+              <stddev>0.007</stddev>
+            </noise>
+          </camera>
+          <always_on>1</always_on>
+          <update_rate>30</update_rate>
+          <visualize>1</visualize>
+          <pose>0.13 0.0175 0.0125 0 -0 0</pose>
+        </sensor>
+        <sensor name='realsenseired1' type='camera'>
+          <camera name='realsense'>
+            <horizontal_fov>1.48702</horizontal_fov>
+            <image>
+              <width>1280</width>
+              <height>720</height>
+              <format>L_INT8</format>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>100</far>
+            </clip>
+            <noise>
+              <type>gaussian</type>
+              <mean>0</mean>
+              <stddev>0.05</stddev>
+            </noise>
+          </camera>
+          <always_on>1</always_on>
+          <update_rate>90</update_rate>
+          <visualize>0</visualize>
+          <pose>0.13 0.0175 0.0125 0 -0 0</pose>
+        </sensor>
+        <sensor name='realsenseired2' type='camera'>
+          <camera name='realsense'>
+            <horizontal_fov>1.48702</horizontal_fov>
+            <image>
+              <width>1280</width>
+              <height>720</height>
+              <format>L_INT8</format>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>100</far>
+            </clip>
+            <noise>
+              <type>gaussian</type>
+              <mean>0</mean>
+              <stddev>0.05</stddev>
+            </noise>
+          </camera>
+          <always_on>1</always_on>
+          <update_rate>90</update_rate>
+          <visualize>0</visualize>
+          <pose>0.13 0.0175 0.0125 0 -0 0</pose>
+        </sensor>
+        <sensor name='realsensedepth' type='depth'>
+          <camera name='realsense'>
+            <horizontal_fov>1.48702</horizontal_fov>
+            <image>
+              <width>1280</width>
+              <height>720</height>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>100</far>
+            </clip>
+            <noise>
+              <type>gaussian</type>
+              <mean>0</mean>
+              <stddev>0.1</stddev>
+            </noise>
+          </camera>
+          <always_on>1</always_on>
+          <update_rate>90</update_rate>
+          <visualize>0</visualize>
+          <pose>0.13 0.0175 0.0125 0 -0 0</pose>
+        </sensor>
+        <sensor name='velodyne-VLP16' type='ray'>
+          <visualize>0</visualize>
+          <update_rate>10</update_rate>
+          <ray>
+            <scan>
+              <horizontal>
+                <samples>360</samples>
+                <resolution>1</resolution>
+                <min_angle>-3.14159</min_angle>
+                <max_angle>3.14159</max_angle>
+              </horizontal>
+              <vertical>
+                <samples>16</samples>
+                <resolution>1</resolution>
+                <min_angle>-0.261799</min_angle>
+                <max_angle>0.261799</max_angle>
+              </vertical>
+            </scan>
+            <range>
+              <min>0.3</min>
+              <max>131</max>
+              <resolution>0.001</resolution>
+            </range>
+            <noise>
+              <type>gaussian</type>
+              <mean>0</mean>
+              <stddev>0</stddev>
+            </noise>
+          </ray>
+          <plugin name='gazebo_ros_laser_controller' filename='libgazebo_ros_velodyne_laser.so'>
+            <topicName>/velodyne_points</topicName>
+            <frameName>velodyne</frameName>
+            <min_range>0.9</min_range>
+            <max_range>130.0</max_range>
+            <gaussianNoise>0.008</gaussianNoise>
+            <robotNamespace>/</robotNamespace>
+          </plugin>
+          <pose>0 0 0.0627 0 -0 0</pose>
+        </sensor>
+      </link>
+      <joint name='FL1_joint' type='revolute'>
+        <pose relative_to='dummy_link'>0.0954 0.04 0 1.5708 0 -1.5708</pose>
+        <parent>dummy_link</parent>
+        <child>FL1</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3</lower>
+            <upper>3</upper>
+            <effort>1.4</effort>
+            <velocity>3</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='FL1'>
+        <pose relative_to='FL1_joint'>0 0 0 0 -0 0</pose>
+        <inertial>
+          <pose>-0.011124 -0.003281 0.000145 0 -0 0</pose>
+          <mass>0.15334</mass>
+          <inertia>
+            <ixx>4.4732e-05</ixx>
+            <ixy>1.0746e-05</ixy>
+            <ixz>1.7651e-07</ixz>
+            <iyy>4.3482e-05</iyy>
+            <iyz>-7.8105e-08</iyz>
+            <izz>6.8645e-05</izz>
+          </inertia>
+        </inertial>
+        <visual name='FL1_visual'>
+          <pose>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/notspot_sim_py/src/notspot_description/meshes/FL1_obj.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='FL2_joint' type='revolute'>
+        <pose relative_to='FL1'>-0.0469 0 0 1.5708 0 -1.5708</pose>
+        <parent>FL1</parent>
+        <child>FL2</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3</lower>
+            <upper>3</upper>
+            <effort>1.4</effort>
+            <velocity>3</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='FL2'>
+        <pose relative_to='FL2_joint'>0 0 0 0 -0 0</pose>
+        <inertial>
+          <pose>0.038603 -0.002558 0.000175 0 -0 0</pose>
+          <mass>0.15106</mass>
+          <inertia>
+            <ixx>2.365e-05</ixx>
+            <ixy>-5.3771e-07</ixy>
+            <ixz>1.6144e-06</ixz>
+            <iyy>0.00010469</iyy>
+            <iyz>-8.306e-08</iyz>
+            <izz>0.00011187</izz>
+          </inertia>
+        </inertial>
+        <collision name='FL2_collision'>
+          <pose>0.04 0 0 3.14159 1.57079 3.14159</pose>
+          <geometry>
+            <cylinder>
+              <length>0.125</length>
+              <radius>0.014</radius>
+            </cylinder>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='FL2_visual'>
+          <pose>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/notspot_sim_py/src/notspot_description/meshes/L2_obj.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='FL3_joint' type='revolute'>
+        <pose relative_to='FL2'>0.1 0 0 0 -0 0</pose>
+        <parent>FL2</parent>
+        <child>FL3</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3</lower>
+            <upper>3</upper>
+            <effort>1.4</effort>
+            <velocity>3</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='FL3'>
+        <pose relative_to='FL3_joint'>0 0 0 0 -0 0</pose>
+        <inertial>
+          <pose>0.070189 -0.00037 3.5e-05 0 -0 0</pose>
+          <mass>0.062472</mass>
+          <inertia>
+            <ixx>6.70917e-07</ixx>
+            <ixy>-2.52282e-07</ixy>
+            <ixz>1.9259e-07</ixz>
+            <iyy>8.81815e-05</iyy>
+            <iyz>-2.57711e-09</iyz>
+            <izz>8.84077e-05</izz>
+          </inertia>
+        </inertial>
+        <collision name='FL3_collision'>
+          <pose>0.045 0 0 3.14159 1.57079 3.14159</pose>
+          <geometry>
+            <cylinder>
+              <length>0.06</length>
+              <radius>0.007</radius>
+            </cylinder>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <collision name='FL3_fixed_joint_lump__FL4_collision_1'>
+          <pose>0.094333 0 0 0 -0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>0.0072</radius>
+            </sphere>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <kp>1e+06</kp>
+                <kd>100</kd>
+                <min_depth>0.0002</min_depth>
+              </ode>
+            </contact>
+            <friction>
+              <ode>
+                <mu>1</mu>
+                <mu2>1</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='FL3_visual'>
+          <pose>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/notspot_sim_py/src/notspot_description/meshes/L3_obj.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='FR1_joint' type='revolute'>
+        <pose relative_to='dummy_link'>0.0954 -0.04 0 1.5708 0 -1.5708</pose>
+        <parent>dummy_link</parent>
+        <child>FR1</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3</lower>
+            <upper>3</upper>
+            <effort>1.4</effort>
+            <velocity>3</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='FR1'>
+        <pose relative_to='FR1_joint'>0 0 0 0 -0 0</pose>
+        <inertial>
+          <pose>0.011092 -0.003272 0.000193 0 -0 0</pose>
+          <mass>0.15379</mass>
+          <inertia>
+            <ixx>4.474e-05</ixx>
+            <ixy>-1.0746e-05</ixy>
+            <ixz>-1.7651e-07</ixz>
+            <iyy>4.3489e-05</iyy>
+            <iyz>-7.8105e-08</iyz>
+            <izz>6.8646e-05</izz>
+          </inertia>
+        </inertial>
+        <visual name='FR1_visual'>
+          <pose>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/notspot_sim_py/src/notspot_description/meshes/FR1_obj.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='FR2_joint' type='revolute'>
+        <pose relative_to='FR1'>0.0469 0 0 1.5708 0 -1.5708</pose>
+        <parent>FR1</parent>
+        <child>FR2</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3</lower>
+            <upper>3</upper>
+            <effort>1.4</effort>
+            <velocity>3</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='FR2'>
+        <pose relative_to='FR2_joint'>0 0 0 0 -0 0</pose>
+        <inertial>
+          <pose>0.038603 -0.002558 -0.000175 0 -0 0</pose>
+          <mass>0.15106</mass>
+          <inertia>
+            <ixx>2.365e-05</ixx>
+            <ixy>-5.3771e-07</ixy>
+            <ixz>-1.6144e-06</ixz>
+            <iyy>0.00010469</iyy>
+            <iyz>8.3059e-08</iyz>
+            <izz>0.00011187</izz>
+          </inertia>
+        </inertial>
+        <collision name='FR2_collision'>
+          <pose>0.04 0 0 3.14159 1.57079 3.14159</pose>
+          <geometry>
+            <cylinder>
+              <length>0.125</length>
+              <radius>0.014</radius>
+            </cylinder>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='FR2_visual'>
+          <pose>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/notspot_sim_py/src/notspot_description/meshes/R2_obj.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='FR3_joint' type='revolute'>
+        <pose relative_to='FR2'>0.1 0 0 0 -0 0</pose>
+        <parent>FR2</parent>
+        <child>FR3</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3</lower>
+            <upper>3</upper>
+            <effort>1.4</effort>
+            <velocity>3</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='FR3'>
+        <pose relative_to='FR3_joint'>0 0 0 0 -0 0</pose>
+        <inertial>
+          <pose>0.070189 -0.00037 -3.5e-05 0 -0 0</pose>
+          <mass>0.062472</mass>
+          <inertia>
+            <ixx>6.70917e-07</ixx>
+            <ixy>-2.52263e-07</ixy>
+            <ixz>-1.92589e-07</ixz>
+            <iyy>8.81815e-05</iyy>
+            <iyz>2.57716e-09</iyz>
+            <izz>8.84077e-05</izz>
+          </inertia>
+        </inertial>
+        <collision name='FR3_collision'>
+          <pose>0.045 0 0 3.14159 1.57079 3.14159</pose>
+          <geometry>
+            <cylinder>
+              <length>0.06</length>
+              <radius>0.007</radius>
+            </cylinder>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <collision name='FR3_fixed_joint_lump__FR4_collision_1'>
+          <pose>0.094333 0 0 0 -0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>0.0072</radius>
+            </sphere>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <kp>1e+06</kp>
+                <kd>100</kd>
+                <min_depth>0.0002</min_depth>
+              </ode>
+            </contact>
+            <friction>
+              <ode>
+                <mu>1</mu>
+                <mu2>1</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='FR3_visual'>
+          <pose>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/notspot_sim_py/src/notspot_description/meshes/R3_obj.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='RL1_joint' type='revolute'>
+        <pose relative_to='dummy_link'>-0.0954 0.04 0 1.5708 0 -1.5708</pose>
+        <parent>dummy_link</parent>
+        <child>RL1</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3</lower>
+            <upper>3</upper>
+            <effort>1.4</effort>
+            <velocity>3</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='RL1'>
+        <pose relative_to='RL1_joint'>0 0 0 0 -0 0</pose>
+        <inertial>
+          <pose>-0.011092 -0.003272 -0.000193 0 -0 0</pose>
+          <mass>0.15379</mass>
+          <inertia>
+            <ixx>4.474e-05</ixx>
+            <ixy>1.0746e-05</ixy>
+            <ixz>-1.7651e-07</ixz>
+            <iyy>4.3489e-05</iyy>
+            <iyz>7.8105e-08</iyz>
+            <izz>6.8646e-05</izz>
+          </inertia>
+        </inertial>
+        <visual name='RL1_visual'>
+          <pose>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/notspot_sim_py/src/notspot_description/meshes/RL1_obj.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='RL2_joint' type='revolute'>
+        <pose relative_to='RL1'>-0.0469 0 0 1.5708 0 -1.5708</pose>
+        <parent>RL1</parent>
+        <child>RL2</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3</lower>
+            <upper>3</upper>
+            <effort>1.4</effort>
+            <velocity>3</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='RL2'>
+        <pose relative_to='RL2_joint'>0 0 0 0 -0 0</pose>
+        <inertial>
+          <pose>0.038603 -0.002558 0.000175 0 -0 0</pose>
+          <mass>0.15106</mass>
+          <inertia>
+            <ixx>2.365e-05</ixx>
+            <ixy>-5.3771e-07</ixy>
+            <ixz>1.6144e-06</ixz>
+            <iyy>0.00010469</iyy>
+            <iyz>-8.306e-08</iyz>
+            <izz>0.00011187</izz>
+          </inertia>
+        </inertial>
+        <collision name='RL2_collision'>
+          <pose>0.04 0 0 3.14159 1.57079 3.14159</pose>
+          <geometry>
+            <cylinder>
+              <length>0.125</length>
+              <radius>0.014</radius>
+            </cylinder>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='RL2_visual'>
+          <pose>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/notspot_sim_py/src/notspot_description/meshes/L2_obj.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='RL3_joint' type='revolute'>
+        <pose relative_to='RL2'>0.1 0 0 0 -0 0</pose>
+        <parent>RL2</parent>
+        <child>RL3</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3</lower>
+            <upper>3</upper>
+            <effort>1.4</effort>
+            <velocity>3</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='RL3'>
+        <pose relative_to='RL3_joint'>0 0 0 0 -0 0</pose>
+        <inertial>
+          <pose>0.070189 -0.00037 3.5e-05 0 -0 0</pose>
+          <mass>0.062472</mass>
+          <inertia>
+            <ixx>6.70917e-07</ixx>
+            <ixy>-2.52282e-07</ixy>
+            <ixz>1.9259e-07</ixz>
+            <iyy>8.81815e-05</iyy>
+            <iyz>-2.57711e-09</iyz>
+            <izz>8.84077e-05</izz>
+          </inertia>
+        </inertial>
+        <collision name='RL3_collision'>
+          <pose>0.045 0 0 3.14159 1.57079 3.14159</pose>
+          <geometry>
+            <cylinder>
+              <length>0.06</length>
+              <radius>0.007</radius>
+            </cylinder>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <collision name='RL3_fixed_joint_lump__RL4_collision_1'>
+          <pose>0.094333 0 0 0 -0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>0.0072</radius>
+            </sphere>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <kp>1e+06</kp>
+                <kd>100</kd>
+                <min_depth>0.0002</min_depth>
+              </ode>
+            </contact>
+            <friction>
+              <ode>
+                <mu>1</mu>
+                <mu2>1</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='RL3_visual'>
+          <pose>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/notspot_sim_py/src/notspot_description/meshes/L3_obj.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='RR1_joint' type='revolute'>
+        <pose relative_to='dummy_link'>-0.0954 -0.04 0 1.5708 0 -1.5708</pose>
+        <parent>dummy_link</parent>
+        <child>RR1</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3</lower>
+            <upper>3</upper>
+            <effort>1.4</effort>
+            <velocity>3</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='RR1'>
+        <pose relative_to='RR1_joint'>0 0 0 0 -0 0</pose>
+        <inertial>
+          <pose>0.011092 -0.003272 -0.000193 0 -0 0</pose>
+          <mass>0.15379</mass>
+          <inertia>
+            <ixx>4.474e-05</ixx>
+            <ixy>-1.0746e-05</ixy>
+            <ixz>1.7651e-07</ixz>
+            <iyy>4.3489e-05</iyy>
+            <iyz>7.8105e-08</iyz>
+            <izz>6.8646e-05</izz>
+          </inertia>
+        </inertial>
+        <visual name='RR1_visual'>
+          <pose>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/notspot_sim_py/src/notspot_description/meshes/RR1_obj.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='RR2_joint' type='revolute'>
+        <pose relative_to='RR1'>0.0469 0 0 1.5708 0 -1.5708</pose>
+        <parent>RR1</parent>
+        <child>RR2</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3</lower>
+            <upper>3</upper>
+            <effort>1.4</effort>
+            <velocity>3</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='RR2'>
+        <pose relative_to='RR2_joint'>0 0 0 0 -0 0</pose>
+        <inertial>
+          <pose>0.038603 -0.002558 -0.000175 0 -0 0</pose>
+          <mass>0.15106</mass>
+          <inertia>
+            <ixx>2.365e-05</ixx>
+            <ixy>-5.3771e-07</ixy>
+            <ixz>-1.6144e-06</ixz>
+            <iyy>0.00010469</iyy>
+            <iyz>8.3059e-08</iyz>
+            <izz>0.00011187</izz>
+          </inertia>
+        </inertial>
+        <collision name='RR2_collision'>
+          <pose>0.04 0 0 3.14159 1.57079 3.14159</pose>
+          <geometry>
+            <cylinder>
+              <length>0.125</length>
+              <radius>0.014</radius>
+            </cylinder>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='RR2_visual'>
+          <pose>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/notspot_sim_py/src/notspot_description/meshes/R2_obj.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='RR3_joint' type='revolute'>
+        <pose relative_to='RR2'>0.1 0 0 0 -0 0</pose>
+        <parent>RR2</parent>
+        <child>RR3</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3</lower>
+            <upper>3</upper>
+            <effort>1.4</effort>
+            <velocity>3</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='RR3'>
+        <pose relative_to='RR3_joint'>0 0 0 0 -0 0</pose>
+        <inertial>
+          <pose>0.070189 -0.00037 -3.5e-05 0 -0 0</pose>
+          <mass>0.062472</mass>
+          <inertia>
+            <ixx>6.70917e-07</ixx>
+            <ixy>-2.52263e-07</ixy>
+            <ixz>-1.92589e-07</ixz>
+            <iyy>8.81815e-05</iyy>
+            <iyz>2.57716e-09</iyz>
+            <izz>8.84077e-05</izz>
+          </inertia>
+        </inertial>
+        <collision name='RR3_collision'>
+          <pose>0.045 0 0 3.14159 1.57079 3.14159</pose>
+          <geometry>
+            <cylinder>
+              <length>0.06</length>
+              <radius>0.007</radius>
+            </cylinder>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <collision name='RR3_fixed_joint_lump__RR4_collision_1'>
+          <pose>0.094333 0 0 0 -0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>0.0072</radius>
+            </sphere>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <kp>1e+06</kp>
+                <kd>100</kd>
+                <min_depth>0.0002</min_depth>
+              </ode>
+            </contact>
+            <friction>
+              <ode>
+                <mu>1</mu>
+                <mu2>1</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='RR3_visual'>
+          <pose>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/media/ryan/DataPad/ros_ws/src/notspot_sim_py/src/notspot_description/meshes/R3_obj.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <plugin name='realsense' filename='librealsense_gazebo_plugin.so'>
+        <prefix>realsense</prefix>
+        <depthUpdateRate>30.0</depthUpdateRate>
+        <colorUpdateRate>30.0</colorUpdateRate>
+        <infraredUpdateRate>30.0</infraredUpdateRate>
+        <depthTopicName>depth/image_raw</depthTopicName>
+        <depthCameraInfoTopicName>depth/camera_info</depthCameraInfoTopicName>
+        <colorTopicName>color/image_raw</colorTopicName>
+        <colorCameraInfoTopicName>color/camera_info</colorCameraInfoTopicName>
+        <infrared1TopicName>infra1/image_raw</infrared1TopicName>
+        <infrared1CameraInfoTopicName>infra1/camera_info</infrared1CameraInfoTopicName>
+        <infrared2TopicName>infra2/image_raw</infrared2TopicName>
+        <infrared2CameraInfoTopicName>infra2/camera_info</infrared2CameraInfoTopicName>
+        <colorOpticalframeName>realsense_color_optical_frame</colorOpticalframeName>
+        <depthOpticalframeName>realsense_depth_optical_frame</depthOpticalframeName>
+        <infrared1OpticalframeName>realsense_left_ir_optical_frame</infrared1OpticalframeName>
+        <infrared2OpticalframeName>realsense_right_ir_optical_frame</infrared2OpticalframeName>
+        <rangeMinDepth>0.2</rangeMinDepth>
+        <rangeMaxDepth>10.0</rangeMaxDepth>
+        <pointCloud>1</pointCloud>
+        <pointCloudTopicName>depth/color/points</pointCloudTopicName>
+        <pointCloudCutoff>0.25</pointCloudCutoff>
+        <pointCloudCutoffMax>9.0</pointCloudCutoffMax>
+        <robotNamespace>/</robotNamespace>
+      </plugin>
+      <plugin name='gazebo_ros_control' filename='libgazebo_ros_control.so'>
+        <robotNamespace>notspot_controller</robotNamespace>
+      </plugin>
+      <static>0</static>
+      <plugin name='joint_state_publisher' filename='libgazebo_ros_joint_state_publisher.so'>
+        <robotNamespace>notspot_gazebo</robotNamespace>
+        <jointName>FR1_joint, FR2_joint, FR3_joint, FL1_joint, FL2_joint, FL3_joint, RR1_joint, RR2_joint, RR3_joint, RL1_joint, RL2_joint, RL3_joint</jointName>
+        <updateRate>100</updateRate>
+      </plugin>
+      <pose>0 0 0.5 0 -0 0</pose>
     </model>
     <material>
       <script>

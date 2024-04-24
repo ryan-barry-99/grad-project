@@ -7,11 +7,11 @@ hyperparameters:
   lr_policy: 0.001
   lr_value: 0.0001
   momentum: 0.9
-  gamma: 0.99
-  lambda: 0.99
+  gamma: 0.9
+  lambda: 0.8
   ppo_clip: 0.2
   clip_c1: 0.6
   clip_c2: 0.1
-  batch_size: 16
-  max_trajectory_length: 16
+  batch_size: 6
+  max_trajectory_length: 6
   learn: True

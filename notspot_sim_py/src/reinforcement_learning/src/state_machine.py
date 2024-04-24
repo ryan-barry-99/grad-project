@@ -21,6 +21,8 @@ class StateMachine:
         rospy.Subscriber('/heuristic/goal/0', Heuristic, self.goal_callback)
         self.atGoal = False
         self.init_goal_dist = None
+        self.goal_dist = Heuristic()
+        self.min_goal_dist = np.inf
 
         rospy.Subscriber('/gazebo/model_poses/robot/notspot', PoseStamped, self.robot_pose_callback)
         self.init_pos = None
@@ -42,23 +44,36 @@ class StateMachine:
         self.point_cloud = PointCloud()
         self.velo = Twist()
 
+        self.wall_indices = [
+            [0.92, 1.125],
+            [0.92, -1.125],
+            [-10.33, -1.125],
+            [-10.33, 4.125],
+            [-2.83, 4.125],
+            [-2.83, 1.125],
+            [-4.59, 2.48],
+            [-4.59, 0.98],
+            [-8.34, 0.98],
+            [-8.34, 2.48]
+        ]
+
         rospy.spin()
 
     def timer_callback(self, event):
         self.step_pub.publish(True)
         self.newStep = True
         self.checking = True
-        self.init_goal_dist = None
         self.check_movement()
 
 
     def goal_callback(self, msg: Heuristic):
+        self.goal_dist = msg
         if self.init_goal_dist is None:
             self.init_goal_dist = msg.manhattan_distance
-        if not self.atGoal and msg.manhattan_distance < 3:
+        if not self.atGoal and msg.manhattan_distance < 1:
             self.atGoal = True
             self.reward_pub.publish("reach_goal")
-        elif msg.manhattan_distance > 3:
+        elif msg.manhattan_distance > 1:
             self.atGoal = False
 
     def robot_pose_callback(self, msg: PoseStamped):
@@ -80,9 +95,19 @@ class StateMachine:
                 new_pos = self.poses_tracked[-1].pose.position
                 new_orient = self.poses_tracked[-1].pose.orientation
 
-                dist = self.calc_dist(old_pos, new_pos)
+                self.check_wall()
 
-                if dist < 2:
+                dist = self.calc_dist(old_pos, new_pos)
+                # if self.init_goal_dist is not None:
+                #     rospy.loginfo(f"{self.old_goal_dist.manhattan_distance < self.goal_dist.manhattan_distance}")
+                # rospy.loginfo(f"old: {self.old_goal_dist}\nnew: {self.goal_dist}")
+                # rospy.loginfo(f"{type(self.old_goal_dist.manhattan_distance)},  {type(self.goal_dist.manhattan_distance)}")
+                if self.init_goal_dist is not None and self.goal_dist.manhattan_distance < self.min_goal_dist:
+                    self.min_goal_dist = self.goal_dist.manhattan_distance
+                    self.reward_pub.publish("moving_forwards")
+                self.old_goal_dist = self.goal_dist
+
+                if dist < 0.75:
                     self.dist_pub.publish(dist)
                     if abs(new_orient.x) < 0.1 and abs(new_orient.y) < 0.1 and len(self.poses_tracked) >= NOT_MOVING_POSES:
                         self.reward_pub.publish("upright")
@@ -96,12 +121,12 @@ class StateMachine:
                 start_dist = self.calc_manhattan_dist(self.init_pos, new_pos)
                 if  start_dist > self.max_start_dist:
                     self.max_start_dist = start_dist
-                    if self.init_goal_dist is not None and start_dist < self.init_goal_dist:
-                        self.reward_pub.publish("moving_forwards")
+                    # if self.init_goal_dist is not None and start_dist < self.init_goal_dist:
+                    #     self.reward_pub.publish("moving_forwards")
                 self.start_dist_pub.publish(self.max_start_dist)
 
-                if self.velo.linear.x <= 0 or dist <= 0.05:
-                    self.reward_pub.publish("moving_backwards")
+                # if self.velo.linear.x <= 0 or dist <= 0.05:
+                #     self.reward_pub.publish("moving_backwards")
 
             if len(self.poses_tracked) >= NUM_POSES_TRACKED:
                 old_pos = self.poses_tracked[0].pose.position
@@ -117,6 +142,7 @@ class StateMachine:
 
     def new_episode_callback(self, msg):
         self.max_start_dist = 0
+        self.min_goal_dist = np.inf
 
 
     def calc_dist(self, pos1, pos2):
@@ -124,6 +150,21 @@ class StateMachine:
     
     def calc_manhattan_dist(self, pos1, pos2):
         return abs(pos2.x - pos1.x) + abs(pos2.y - pos1.y)
+    
+    def check_wall(self):
+        pos = self.poses_tracked[-1].pose.position
+        x, y = pos.x, pos.y
+        thres = 0.5
+        if y < -1.125 + thres or x < -10.33 + thres or y > 4.125 - thres:
+            self.reward_pub.publish("hits_wall")
+            return
+        if x > -2.83 - thres:
+            if x > 0.92 - thres or y > 1.125 - thres:
+                self.reward_pub.publish("hits_wall")
+                return
+        if y < 2.48 + thres and y > 0.98 - thres and x < -4.59 + thres and x > -8.34 - thres:
+            self.reward_pub.publish("hits_wall")
+            return
 
 
 

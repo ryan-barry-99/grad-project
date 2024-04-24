@@ -10,7 +10,7 @@ import torch
 from reinforcement_learning.msg import Heuristic
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String, Bool, Float32
-from navigation_networks import PolicyNetwork, ValueNetwork
+from navigation_networks import PolicyNetwork
 from functools import partial
 from geometry_msgs.msg import PoseStamped, Pose
 from sensor_msgs.msg import Imu
@@ -203,7 +203,8 @@ class ProximalPolicyOptimization:
                 self.rewards=0
                 
                 velocity_vector = velocity_vector.cpu().squeeze().tolist()
-                self.publish_velocity(velocity_vector)
+                if self.ai_controls:
+                    self.publish_velocity(velocity_vector)
 
                 if self.buffer.at_capacity():
                     self.update_networks()
@@ -212,7 +213,8 @@ class ProximalPolicyOptimization:
                 self.go = False
                 self.closest_goal = np.inf
                 self.furthest_goal = 0
-                self.publish_velocity([0,0,0])
+                if self.ai_controls:
+                    self.publish_velocity([0,0,0])
                 self.reset_pub.publish("reset")
 
         else:
@@ -461,7 +463,7 @@ class ProximalPolicyOptimization:
         
         # Update the old position with the current position
         self.old_position = position
-        self.position_tensor = torch.tensor([[position.x, position.y, distance_traveled, self.max_start_dist]])
+        self.position_tensor = torch.tensor([[distance_traveled, self.closest_goal, self.max_start_dist]])
 
     def calculate_distance(self, pos1, pos2):
         distance = ((pos2.x - pos1.x) ** 2 + (pos2.y - pos1.y) ** 2) ** 0.5

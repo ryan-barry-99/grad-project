@@ -1,0 +1,62 @@
+models:
+  - model_name: notspot_gazebo
+    namespace: robot
+    tag: notspot
+
+  - model_name: walkway_metal_straight
+    namespace: goal
+    tag: 0
+  - model_name: walkway_metal_straight_clone
+    namespace: goal
+    tag: 1
+  - model_name: walkway_metal_straight_clone_0
+    namespace: goal
+    tag: 2
+  - model_name: walkway_metal_straight_clone_1
+    namespace: goal
+    tag: 3
+  - model_name: walkway_metal_straight_clone_2
+    namespace: goal
+    tag: 4
+
+  - model_name: icy_ramp_clone
+    namespace: icy_ramp
+    tag: 0
+  - model_name: icy_ramp_clone_0
+    namespace: icy_ramp
+    tag: 1
+  - model_name: icy_ramp_clone_1
+    namespace: icy_ramp
+    tag: 2
+  - model_name: icy_ramp_clone_2
+    namespace: icy_ramp
+    tag: 3
+  - model_name: icy_ramp_clone_3
+    namespace: icy_ramp
+    tag: 4
+  - model_name: icy_ramp_clone_4
+    namespace: icy_ramp
+    tag: 5
+  - model_name: icy_ramp_clone_6
+    namespace: icy_ramp
+    tag: 6
+
+  - model_name: dry_ramp_clone
+    namespace: dry_ramp
+    tag: 0
+  - model_name: dry_ramp_clone_0
+    namespace: dry_ramp
+    tag: 1
+  - model_name: dry_ramp_clone_1
+    namespace: dry_ramp
+    tag: 2
+  - model_name: dry_ramp_clone_2
+    namespace: dry_ramp
+    tag: 3
+
+  - model_name: Construction Cone
+    namespace: environment_bounds
+    tag: 0
+  - model_name: Construction Cone_0
+    namespace: environment_bounds
+    tag: 1
