@@ -113,6 +113,7 @@ class ProximalPolicyOptimization:
         self.starting_distance = 0
         self.environment = 0
         self.last_known_environment = 0
+        self.wall_tensor = torch.tensor([[0]])
         self.initialize_episodes()
         self.experiences = {}
         self.buffer = ExperienceBuffer(
@@ -200,6 +201,7 @@ class ProximalPolicyOptimization:
                 if self.steps_since_update == 4:
                     self.pose_pub.publish(Pose())
                 self.lifespan += 1
+                # rospy.loginfo(self.wall_tensor)
                 self.experiences = {
                         "rgb": self.rgb_tensor.to(self.device),                # 480, 640, 3
                         "depth":self.depth_tensor.to(self.device),             # 720, 1280

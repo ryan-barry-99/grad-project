@@ -1,5 +1,5 @@
 hyperparameters:
-  load_model: True
+  load_model: False
   run: "2024_04_24_11_47_16"
   policy_model_path: "latest_policy.pt"
   optimizer: 'RMSprop'

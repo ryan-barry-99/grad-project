@@ -11,7 +11,7 @@ import numpy as np
 import random
 
 NUM_POSES_TRACKED = 60
-NOT_MOVING_POSES = 2
+NOT_MOVING_POSES = 5
 
 class StateMachine:
     def __init__(self):
@@ -155,12 +155,12 @@ class StateMachine:
                 # rospy.loginfo(f"old: {self.old_goal_dist}\nnew: {self.goal_dist}")
                 # rospy.loginfo(f"{type(self.old_goal_dist.manhattan_distance)},  {type(self.goal_dist.manhattan_distance)}")
                 if self.init_goal_dist is not None and self.goal_dist.manhattan_distance - self.min_goal_dist < 0:
-                    self.reward_pub.publish(f"moving_forward/{self.goal_dist.manhattan_distance - self.min_goal_dist}")
+                    self.reward_pub.publish(f"moving_forward/{abs(self.goal_dist.manhattan_distance - self.min_goal_dist)}")
                     # self.reward_pub.publish(f"{self.goal_dist.manhattan_distance - self.min_goal_dist}")
                     self.min_goal_dist = self.goal_dist.manhattan_distance
                 self.old_goal_dist = self.goal_dist
 
-                if dist < 2:
+                if dist < 1:
                     self.dist_pub.publish(dist)
                     if abs(new_orient.x) < 0.1 and abs(new_orient.y) < 0.1 and len(self.poses_tracked) >= NOT_MOVING_POSES:
                         self.reward_pub.publish("upright")

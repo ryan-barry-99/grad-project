@@ -83,7 +83,7 @@ class Reward:
             # "not_moving": 0,
             # "upright": 0,
             "fell": -1,
-            "moving_forward": 0.1,
+            # "moving_forward": 0.1,
             # "moving_backward": 0
         }
         if msg.data in self.rewards.keys():
@@ -103,14 +103,16 @@ class Reward:
             # Convert to float
             if dist is not None:
                 try:
-                    if abs(dist) < 3:
-                        self.publishers['action_reward'].publish(min(1, 100*abs(dist)))
+                    if abs(dist) < 5:
+                        reward = abs(dist)
+                        self.total_reward.data += reward
+                        self.publishers['action_reward'].publish(reward)
                 except ValueError:
                     rospy.loginfo("Cannot convert to float. The string after the slash is not a number.")
                     
     
         if msg.data == "not_moving":
-            distance_threshold = 2 # Threshold for minimum distance moved
+            distance_threshold = 1 # Threshold for minimum distance moved
             max_penalty = -1.0  # Maximum penalty value
 
             # Calculate the penalty based on the distance moved
