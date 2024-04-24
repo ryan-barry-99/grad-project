@@ -98,6 +98,7 @@ class ProximalPolicyOptimization:
         self.init_steps_dir = False
         self.init_goal_dir = False
         self.init_distance_dir = False
+        self.init_environment_dir = False
         self.old_position = None
         self.go = False
         self.dist = np.inf
@@ -108,6 +109,7 @@ class ProximalPolicyOptimization:
         self.max_start_dist = 0
         self.starting_distance = 0
         self.environment = 0
+        self.last_known_environment = 0
         self.initialize_episodes()
         self.experiences = {}
         self.buffer = ExperienceBuffer(
@@ -164,6 +166,9 @@ class ProximalPolicyOptimization:
                     file.write(f"{self.total_distance_traveled}\n{self.starting_distance}")
                     self.total_distance_traveled = 0
                     self.starting_distance = 0
+                with open(f'{self.environment_folder}/episode_{self.episode_num}.txt', 'w') as file:
+                    file.write(f"{self.last_known_environment}")
+                    self.last_known_environment = self.environment
                 self.episode_num += 1
                 rospy.loginfo(f"Starting episode {self.episode_num}")
                 if self.buffer.length >= 1:
@@ -425,6 +430,11 @@ class ProximalPolicyOptimization:
             if rospy.has_param('/RL/runs/distance_folder'):
                 self.distance_folder = rospy.get_param('/RL/runs/distance_folder')
                 self.init_distance_dir = True
+
+        while not self.init_environment_dir:
+            if rospy.has_param('/RL/runs/environment_folder'):
+                self.environment_folder = rospy.get_param('/RL/runs/environment_folder')
+                self.init_environment_dir = True
                 
 
     def rgb_image_callback(self, img: Image):
