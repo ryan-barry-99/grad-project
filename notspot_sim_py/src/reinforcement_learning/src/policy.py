@@ -100,11 +100,14 @@ class ProximalPolicyOptimization:
         self.init_distance_dir = False
         self.init_environment_dir = False
         self.old_position = None
+        self.getPosition = False
         self.go = False
+        self.hits_wall = False
         self.dist = np.inf
         self.closest_goal = np.inf
         self.furthest_goal = 0
         self.goal_dist = np.inf
+        self.old_goal_dist = None
         self.ending_goal = np.inf
         self.max_start_dist = 0
         self.starting_distance = 0
@@ -151,6 +154,7 @@ class ProximalPolicyOptimization:
         if msg.data:
             if self.new_episode:
                 self.go = False
+                self.getPosition = False
                 with open(f'{self.rewards_folder}/episode_{self.episode_num}.txt', 'w') as f:
                     f.write(f"{self.total_rewards}")
                     self.total_rewards = 0
@@ -162,6 +166,8 @@ class ProximalPolicyOptimization:
                     if self.ending_goal > self.furthest_goal:
                         self.furthest_goal = self.ending_goal
                     file.write(f"{self.closest_goal}\n{self.furthest_goal}\n{self.ending_goal}")
+                    self.closest_goal = np.inf
+                    self.furthest_goal = 0
                 with open(f'{self.distance_folder}/episode_{self.episode_num}.txt', 'w') as file:
                     file.write(f"{self.total_distance_traveled}\n{self.starting_distance}")
                     self.total_distance_traveled = 0
@@ -187,6 +193,7 @@ class ProximalPolicyOptimization:
                 self.new_episode = False       
             self.steps_since_update += 1
             if self.steps_since_update >= 4: 
+                self.getPosition = True
                 self.starting_distance = self.max_start_dist 
                 self.go = True
                 self.ending_goal = self.goal_dist
@@ -202,8 +209,9 @@ class ProximalPolicyOptimization:
                         "orientation": self.orientation_tensor.to(self.device),# 1, 4
                         "ang_vel": self.ang_vel_tensor.to(self.device),        # 1, 3
                         "lin_acc": self.lin_acc_tensor.to(self.device),        # 1, 3
+                        "wall": self.wall_tensor.to(self.device)
                     }
-                
+                self.hits_wall = False
                 mean, std, value = self.policy(self.experiences)
                 velocity_vector, self.log_probs = self.sample_velocity(mean, std)
                 velocity_vector = torch.tensor(self.prep_velo(velocity_vector), requires_grad=True).to(self.device).unsqueeze(0)
@@ -211,7 +219,7 @@ class ProximalPolicyOptimization:
                 # value = self.value(self.experiences, velocity_vector).tolist()
                 self.buffer.store(state=self.experiences, action=velocity_vector, reward=self.rewards, log_prob = self.log_probs, value=value)
                 self.rewards=0
-                
+                                
                 velocity_vector = velocity_vector.cpu().squeeze().tolist()
                 if self.ai_controls:
                     self.publish_velocity(velocity_vector)
@@ -468,18 +476,28 @@ class ProximalPolicyOptimization:
         self.heuristic_tensor[goal] = torch.tensor([msg.x_distance, msg.y_distance, msg.manhattan_distance])
 
     def pose_callback(self, msg: PoseStamped):
-        position = msg.pose.position
-        if self.old_position is not None:
-            # Calculate distance traveled from the old position to the current position
-            distance_traveled = self.calculate_distance(self.old_position, position)
-            if distance_traveled < 3:
+        if self.getPosition:
+            position = msg.pose.position
+            if self.old_position is not None:
+                # Calculate distance traveled from the old position to the current position
+                distance_traveled = self.calculate_distance(self.old_position, position)
+                if distance_traveled > 3:
+                    distance_traveled = 0
                 self.total_distance_traveled += distance_traveled
+            else:
+                distance_traveled = 0
+            
+            # Update the old position with the current position
+            self.old_position = position
+
+            if self.old_goal_dist is None:
+                self.old_goal_dist = self.goal_dist
+            progress = (self.goal_dist - self.old_goal_dist) * 100
+            self.old_goal_dist = self.goal_dist
+            self.position_tensor = torch.tensor([[distance_traveled, progress, self.closest_goal]])
+            self.getPosition = False
         else:
-            distance_traveled = 0
-        
-        # Update the old position with the current position
-        self.old_position = position
-        self.position_tensor = torch.tensor([[distance_traveled, self.closest_goal]])
+            self.position_tensor = torch.tensor([[0, 0, self.closest_goal]])
 
     def calculate_distance(self, pos1, pos2):
         distance = ((pos2.x - pos1.x) ** 2 + (pos2.y - pos1.y) ** 2) ** 0.5
@@ -487,7 +505,11 @@ class ProximalPolicyOptimization:
     
     def imu_callback(self, msg: Imu):
         orient = msg.orientation
-        self.orientation_tensor = torch.tensor([[orient.x, orient.y, orient.z, orient.w]])
+        if abs(orient.x) > 0.15 or abs(orient.y) > 0.15:
+            fell = 1
+        else:
+            fell = 0
+        self.orientation_tensor = torch.tensor([[orient.x, orient.y, orient.z, orient.w, fell]])
 
         ang_vel = msg.angular_velocity
         self.ang_vel_tensor = torch.tensor([[ang_vel.x, ang_vel.y, ang_vel.z]])
@@ -506,8 +528,13 @@ class ProximalPolicyOptimization:
 
     
     def states_callback(self, msg: String):
+        if not self.hits_wall:
+            self.wall_tensor = torch.tensor([[0]])
         if msg.data == "reach_goal":
             self.goal = True
+        if msg.data == "hits_wall":
+            self.wall_tensor = torch.tensor([[1]])
+            self.hits_wall = True
 
     def new_episode_callback(self, msg):
         self.velo_pub.publish(Twist())

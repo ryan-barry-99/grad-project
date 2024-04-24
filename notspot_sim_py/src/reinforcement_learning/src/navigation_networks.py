@@ -60,7 +60,7 @@ class StateExtractionNet(nn.Module):
         self.rgb_branch = CNN_Branch(in_channels=3, dim1=480, dim2=640)  # RGB image
         self.depth_branch = CNN_Branch(in_channels=1, dim1=720, dim2=1280)  # Depth image
         self.grid_branch = CNN_Branch(in_channels=1, dim1=100, dim2=100)  # Grid image
-        self.fusion_net = DenseNetwork(783)
+        self.fusion_net = DenseNetwork(786)
 
     def forward(self, state):
         # rgb, depth, grid, heuristic, position, orientation, ang_vel, lin_acc
@@ -76,7 +76,8 @@ class StateExtractionNet(nn.Module):
             state["position"],
             state["orientation"],
             state["ang_vel"],
-            state["lin_acc"]
+            state["lin_acc"],
+            state['wall']
             ))
 
         return x

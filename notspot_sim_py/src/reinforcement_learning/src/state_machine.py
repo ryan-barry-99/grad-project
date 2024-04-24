@@ -44,6 +44,8 @@ class StateMachine:
         self.poses_tracked = []
         self.newStep = False
         self.checking = False
+        self.new_episode = False
+        self.check_dist = False
         self.environment = 1
         self.point_cloud = PointCloud()
         self.velo = Twist()
@@ -99,6 +101,9 @@ class StateMachine:
         self.newStep = True
         self.checking = True
         self.check_movement()
+        if self.new_episode:
+            self.check_dist = True
+            self.new_episode = False
 
 
     def goal0_callback(self, msg: Heuristic):
@@ -166,8 +171,9 @@ class StateMachine:
             
                 old_pos = self.poses_tracked[-2].pose.position
                 dist = self.calc_dist(old_pos, new_pos)
+                
                 start_dist = self.calc_manhattan_dist(self.init_pos, new_pos)
-                if  start_dist > self.max_start_dist:
+                if  dist < 3 and start_dist > self.max_start_dist:
                     self.max_start_dist = start_dist
                     # if self.init_goal_dist is not None and start_dist < self.init_goal_dist:
                     #     self.reward_pub.publish("moving_forwards")
@@ -193,6 +199,14 @@ class StateMachine:
         self.min_goal_dist = np.inf
         self.environment = random.choice([0, 1])
         self.environment_pub.publish(self.environment)
+        self.new_episode = True
+        self.check_dist = False
+        self.init_pos = PoseStamped()
+        self.init_pos = self.init_pos.pose.position
+        if self.environment == 0:
+            self.init_pos.y = 0
+        else:
+            self.init_pos.y = -10
     
 
 

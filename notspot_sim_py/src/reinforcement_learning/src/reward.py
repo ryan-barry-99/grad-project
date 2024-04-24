@@ -104,7 +104,7 @@ class Reward:
             if dist is not None:
                 try:
                     if abs(dist) < 3:
-                        self.publishers['action_reward'].publish(min(1, 10*abs(dist)))
+                        self.publishers['action_reward'].publish(min(1, 100*abs(dist)))
                 except ValueError:
                     rospy.loginfo("Cannot convert to float. The string after the slash is not a number.")
                     

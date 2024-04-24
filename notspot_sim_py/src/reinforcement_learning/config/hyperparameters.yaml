@@ -1,11 +1,9 @@
 hyperparameters:
-  load_model: False
-  run: "2024_04_23_23_41_52"
+  load_model: True
+  run: "2024_04_24_11_47_16"
   policy_model_path: "latest_policy.pt"
-  value_model_path: "latest_value.pt"
   optimizer: 'RMSprop'
   lr_policy: 0.001
-  lr_value: 0.0001
   momentum: 0.9
   gamma: 0.9
   lambda: 1.0
