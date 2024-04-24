@@ -40,10 +40,10 @@ class DenseNetwork(nn.Module):
         # Concatenate the output tensors from the CNN branches with other tensors
         x = torch.cat(fused_observation, dim=1)
         # Pass through dense layers
-        x = F.leaky_relu(self.fc1(x))
-        x = F.leaky_relu(self.fc2(x))
-        x = F.leaky_relu(self.fc3(x))
-        x = F.leaky_relu(self.fc4(x))
+        x = F.tanh(self.fc1(x))
+        x = F.tanh(self.fc2(x))
+        x = F.tanh(self.fc3(x))
+        x = F.tanh(self.fc4(x))
         return x
 
     
@@ -60,7 +60,7 @@ class StateExtractionNet(nn.Module):
         self.rgb_branch = CNN_Branch(in_channels=3, dim1=480, dim2=640)  # RGB image
         self.depth_branch = CNN_Branch(in_channels=1, dim1=720, dim2=1280)  # Depth image
         self.grid_branch = CNN_Branch(in_channels=1, dim1=100, dim2=100)  # Grid image
-        self.fusion_net = DenseNetwork(784)
+        self.fusion_net = DenseNetwork(783)
 
     def forward(self, state):
         # rgb, depth, grid, heuristic, position, orientation, ang_vel, lin_acc

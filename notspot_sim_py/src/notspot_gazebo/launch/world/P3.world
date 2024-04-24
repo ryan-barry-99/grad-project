@@ -71,15 +71,14 @@
       <static>1</static>
       <link name='flat_plane'>
         <inertial>
-          <mass>1000.0</mass> <!-- Increase mass value as needed -->
-          <!-- Adjust inertia matrix as needed -->
+          <mass>1000</mass>
           <inertia>
-            <ixx>10.0</ixx>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyy>10.0</iyy>
-            <iyz>0.0</iyz>
-            <izz>10.0</izz>
+            <ixx>10</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>10</iyy>
+            <iyz>0</iyz>
+            <izz>10</izz>
           </inertia>
         </inertial>
         <pose>0 0 0.069756 0 -0 0</pose>
@@ -128,15 +127,14 @@
       </link>
       <link name='upward_slope'>
         <inertial>
-          <mass>1000.0</mass> <!-- Increase mass value as needed -->
-          <!-- Adjust inertia matrix as needed -->
+          <mass>1000</mass>
           <inertia>
-            <ixx>10.0</ixx>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyy>10.0</iyy>
-            <iyz>0.0</iyz>
-            <izz>10.0</izz>
+            <ixx>10</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>10</iyy>
+            <iyz>0</iyz>
+            <izz>10</izz>
           </inertia>
         </inertial>
         <pose>-0.998409 0 0.034878 0 -0.069813 0</pose>
@@ -185,15 +183,14 @@
       </link>
       <link name='downward_slope'>
         <inertial>
-          <mass>1000.0</mass> <!-- Increase mass value as needed -->
-          <!-- Adjust inertia matrix as needed -->
+          <mass>1000</mass>
           <inertia>
-            <ixx>10.0</ixx>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyy>10.0</iyy>
-            <iyz>0.0</iyz>
-            <izz>10.0</izz>
+            <ixx>10</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>10</iyy>
+            <iyz>0</iyz>
+            <izz>10</izz>
           </inertia>
         </inertial>
         <pose>0.998409 0 0.034878 0 0.069813 0</pose>
@@ -243,18 +240,17 @@
     </model>
     <model name='c_icy_ramp'>
       <pose>10.7103 -26.0075 0 0 -0 0</pose>
-      <static>1</static>      
+      <static>1</static>
       <link name='flat_plane'>
         <inertial>
-          <mass>1000.0</mass> <!-- Increase mass value as needed -->
-          <!-- Adjust inertia matrix as needed -->
+          <mass>1000</mass>
           <inertia>
-            <ixx>10.0</ixx>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyy>10.0</iyy>
-            <iyz>0.0</iyz>
-            <izz>10.0</izz>
+            <ixx>10</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>10</iyy>
+            <iyz>0</iyz>
+            <izz>10</izz>
           </inertia>
         </inertial>
         <pose>0 0 0.069756 0 -0 0</pose>
@@ -309,15 +305,14 @@
       </link>
       <link name='upward_slope'>
         <inertial>
-          <mass>1000.0</mass> <!-- Increase mass value as needed -->
-          <!-- Adjust inertia matrix as needed -->
+          <mass>1000</mass>
           <inertia>
-            <ixx>10.0</ixx>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyy>10.0</iyy>
-            <iyz>0.0</iyz>
-            <izz>10.0</izz>
+            <ixx>10</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>10</iyy>
+            <iyz>0</iyz>
+            <izz>10</izz>
           </inertia>
         </inertial>
         <pose>-0.998409 0 0.034878 0 -0.069813 0</pose>
@@ -372,15 +367,14 @@
       </link>
       <link name='downward_slope'>
         <inertial>
-          <mass>1000.0</mass> <!-- Increase mass value as needed -->
-          <!-- Adjust inertia matrix as needed -->
+          <mass>1000</mass>
           <inertia>
-            <ixx>10.0</ixx>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyy>10.0</iyy>
-            <iyz>0.0</iyz>
-            <izz>10.0</izz>
+            <ixx>10</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>10</iyy>
+            <iyz>0</iyz>
+            <izz>10</izz>
           </inertia>
         </inertial>
         <pose>0.998409 0 0.034878 0 0.069813 0</pose>
@@ -939,22 +933,21 @@
         <enable_wind>0</enable_wind>
         <kinematic>0</kinematic>
       </link>
-      <pose>-16.6703 -20.168539 0 0 -0 0</pose>
+      <pose>-16.6703 -20.1685 0 0 -0 0</pose>
     </model>
     <model name='dry_ramp'>
       <pose>4.1248 -16.0075 0 0 -0 0</pose>
       <static>1</static>
       <link name='flat_plane'>
         <inertial>
-          <mass>1000.0</mass> <!-- Increase mass value as needed -->
-          <!-- Adjust inertia matrix as needed -->
+          <mass>1000</mass>
           <inertia>
-            <ixx>10.0</ixx>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyy>10.0</iyy>
-            <iyz>0.0</iyz>
-            <izz>10.0</izz>
+            <ixx>10</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>10</iyy>
+            <iyz>0</iyz>
+            <izz>10</izz>
           </inertia>
         </inertial>
         <pose>0 0 0.069756 0 -0 0</pose>
@@ -1003,15 +996,14 @@
       </link>
       <link name='upward_slope'>
         <inertial>
-          <mass>1000.0</mass> <!-- Increase mass value as needed -->
-          <!-- Adjust inertia matrix as needed -->
+          <mass>1000</mass>
           <inertia>
-            <ixx>10.0</ixx>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyy>10.0</iyy>
-            <iyz>0.0</iyz>
-            <izz>10.0</izz>
+            <ixx>10</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>10</iyy>
+            <iyz>0</iyz>
+            <izz>10</izz>
           </inertia>
         </inertial>
         <pose>-0.998409 0 0.034878 0 -0.069813 0</pose>
@@ -1060,15 +1052,14 @@
       </link>
       <link name='downward_slope'>
         <inertial>
-          <mass>1000.0</mass> <!-- Increase mass value as needed -->
-          <!-- Adjust inertia matrix as needed -->
+          <mass>1000</mass>
           <inertia>
-            <ixx>10.0</ixx>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyy>10.0</iyy>
-            <iyz>0.0</iyz>
-            <izz>10.0</izz>
+            <ixx>10</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>10</iyy>
+            <iyz>0</iyz>
+            <izz>10</izz>
           </inertia>
         </inertial>
         <pose>0.998409 0 0.034878 0 0.069813 0</pose>
@@ -1118,18 +1109,17 @@
     </model>
     <model name='icy_ramp'>
       <pose>10.7103 4.23574 0 0 -0 0</pose>
-      <static>1</static>      
+      <static>1</static>
       <link name='flat_plane'>
         <inertial>
-          <mass>1000.0</mass> <!-- Increase mass value as needed -->
-          <!-- Adjust inertia matrix as needed -->
+          <mass>1000</mass>
           <inertia>
-            <ixx>10.0</ixx>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyy>10.0</iyy>
-            <iyz>0.0</iyz>
-            <izz>10.0</izz>
+            <ixx>10</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>10</iyy>
+            <iyz>0</iyz>
+            <izz>10</izz>
           </inertia>
         </inertial>
         <pose>0 0 0.069756 0 -0 0</pose>
@@ -1184,15 +1174,14 @@
       </link>
       <link name='upward_slope'>
         <inertial>
-          <mass>1000.0</mass> <!-- Increase mass value as needed -->
-          <!-- Adjust inertia matrix as needed -->
+          <mass>1000</mass>
           <inertia>
-            <ixx>10.0</ixx>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyy>10.0</iyy>
-            <iyz>0.0</iyz>
-            <izz>10.0</izz>
+            <ixx>10</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>10</iyy>
+            <iyz>0</iyz>
+            <izz>10</izz>
           </inertia>
         </inertial>
         <pose>-0.998409 0 0.034878 0 -0.069813 0</pose>
@@ -1247,15 +1236,14 @@
       </link>
       <link name='downward_slope'>
         <inertial>
-          <mass>1000.0</mass> <!-- Increase mass value as needed -->
-          <!-- Adjust inertia matrix as needed -->
+          <mass>1000</mass>
           <inertia>
-            <ixx>10.0</ixx>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyy>10.0</iyy>
-            <iyz>0.0</iyz>
-            <izz>10.0</izz>
+            <ixx>10</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>10</iyy>
+            <iyz>0</iyz>
+            <izz>10</izz>
           </inertia>
         </inertial>
         <pose>0.998409 0 0.034878 0 0.069813 0</pose>
@@ -1796,10 +1784,10 @@
       <pose>-16.6703 -0.168539 0 0 -0 0</pose>
     </model>
     <state world_name='default'>
-      <sim_time>1519 650000000</sim_time>
-      <real_time>75 420804616</real_time>
-      <wall_time>1713904428 728552719</wall_time>
-      <iterations>68701</iterations>
+      <sim_time>1585 724000000</sim_time>
+      <real_time>72 553035068</real_time>
+      <wall_time>1713928614 490763602</wall_time>
+      <iterations>66074</iterations>
       <model name='c_dry_ramp'>
         <pose>-6.5023 -9.94 0 0 -0 0.006807</pose>
         <scale>1 2 1</scale>
@@ -1823,10 +1811,10 @@
         </link>
       </model>
       <model name='c_fire_hydrant'>
-        <pose>-9.15161 -10.168539 0 0 -0 0</pose>
+        <pose>-9.15161 -10.1685 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>-9.15161 -10.168539 0 0 -0 0</pose>
+          <pose>-9.15161 -10.1685 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -1853,7 +1841,7 @@
         </link>
       </model>
       <model name='c_grey_wall_clone_0'>
-        <pose>-4.58573 -8.21966-0 0 0 -1.57877</pose>
+        <pose>-4.58573 -8.21966 -0 0 0 -1.57877</pose>
         <scale>0.2 1 1</scale>
         <link name='link'>
           <pose>-4.58573 -8.21966 1.4 0 0 -1.57877</pose>
@@ -1883,10 +1871,10 @@
         </link>
       </model>
       <model name='c_grey_wall_clone_0_clone_1'>
-        <pose>0.915728 -9.947124 -0 0 0 -1.57877</pose>
+        <pose>0.915728 -9.94712 -0 0 0 -1.57877</pose>
         <scale>0.3 1 1</scale>
         <link name='link'>
-          <pose>0.915728 -9.947124 1.4 0 0 -1.57877</pose>
+          <pose>0.915728 -9.94712 1.4 0 0 -1.57877</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -1943,7 +1931,7 @@
         </link>
       </model>
       <model name='c_icy_ramp'>
-        <pose>-6.50655 -26.0075 0 0 -0 0</pose>
+        <pose>-6.50655 0.059735 0 0 -0 0</pose>
         <scale>1 2 1</scale>
         <link name='downward_slope'>
           <pose>-5.50815 0.059735 0.034878 0 0.069813 0</pose>
@@ -2095,23 +2083,24 @@
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
+      </model>
       <model name='icy_ramp'>
-        <pose>-6.50655 0.059735 0 0 -0 0</pose>
+        <pose>-6.52276 -6.54195 0 0 -0 0</pose>
         <scale>1 2 1</scale>
         <link name='downward_slope'>
-          <pose>-5.50815 0.059735 0.034878 0 0.069813 0</pose>
+          <pose>-5.52435 -6.54195 0.034878 0 0.069813 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
         <link name='flat_plane'>
-          <pose>-6.50655 0.059735 0.069756 0 -0 0</pose>
+          <pose>-6.52276 -6.54195 0.069756 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
         <link name='upward_slope'>
-          <pose>-7.50496 0.059735 0.034878 0 -0.069813 0</pose>
+          <pose>-7.52117 -6.54195 0.034878 0 -0.069813 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -2120,11 +2109,10 @@
       <light name='sun'>
         <pose>0 0 10 0 -0 0</pose>
       </light>
-      </model>
     </state>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>-12.6772 -0.741005 42.0324 0 1.5378 -0.307764</pose>
+        <pose>-13.7088 -11.7058 40.8526 0 1.5378 -0.307764</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>

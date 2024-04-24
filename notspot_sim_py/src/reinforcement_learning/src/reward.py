@@ -80,32 +80,51 @@ class Reward:
         self.rewards = {
             "hits_wall": -1,
             "reach_goal": 1,
-            "not_moving": 0,
-            "upright": 0,
-            "fell": -10,
+            # "not_moving": 0,
+            # "upright": 0,
+            "fell": -1,
             "moving_forward": 0.1,
-            "moving_backward": 0
+            # "moving_backward": 0
         }
         if msg.data in self.rewards.keys():
             reward = self.rewards[msg.data]
             self.publishers['action_reward'].publish(reward)
             self.total_reward.data += reward
-            self.publishers['total_reward'].publish(self.total_reward)
-            if msg.data == "upright":
-                self.upright = True
-            if msg.data == "not_moving":
-                distance_threshold = 0.75 # Threshold for minimum distance moved
-                max_penalty = -1.0  # Maximum penalty value
+        if msg.data == "upright":
+            self.upright = True
 
-                # Calculate the penalty based on the distance moved
-                penalty = -distance_threshold / max(distance_threshold - abs(self.dist), 0.001)  # Ensure non-zero denominator
-                
-                # Clip the penalty to ensure it does not exceed the maximum penalty
-                penalty = min(penalty, max_penalty)
+        if "moving_forward" in msg.data:
+            split_string = msg.data.split('/')
 
-                if self.upright:
-                    penalty /= 20
-                self.publishers['action_reward'].publish(penalty)
+            # Get the part to the right of the slash
+            right_of_slash = split_string[1] if len(split_string) > 1 else None
+            dist = float(right_of_slash)
+            
+            # Convert to float
+            if dist is not None:
+                try:
+                    if abs(dist) < 3:
+                        self.publishers['action_reward'].publish(min(1, 10*abs(dist)))
+                except ValueError:
+                    rospy.loginfo("Cannot convert to float. The string after the slash is not a number.")
+                    
+    
+        if msg.data == "not_moving":
+            distance_threshold = 2 # Threshold for minimum distance moved
+            max_penalty = -1.0  # Maximum penalty value
+
+            # Calculate the penalty based on the distance moved
+            penalty = -distance_threshold / max(distance_threshold - abs(self.dist), 0.001)  # Ensure non-zero denominator
+            
+            # Clip the penalty to ensure it does not exceed the maximum penalty
+            penalty = min(penalty, max_penalty)
+
+            penalty /= 100
+            self.publishers['action_reward'].publish(penalty)
+            self.total_reward.data += penalty
+            
+        
+        self.publishers['total_reward'].publish(self.total_reward)
         if msg.data == "reach_goal" or msg.data == "stuck" or msg.data == "fell":
             self.new_episode_pub.publish(True)
 

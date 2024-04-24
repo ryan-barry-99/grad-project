@@ -3,37 +3,9 @@ models:
     namespace: robot
     tag: notspot
 
-  - model_name: grey_wall
-    namespace: wall
-    tag: 0
-  - model_name: grey_wall_clone
-    namespace: wall
-    tag: 1
-  - model_name: grey_wall_clone_0
-    namespace: wall
-    tag: 2
-  - model_name: grey_wall_clone_0_clone
-    namespace: wall
-    tag: 3
-  - model_name: grey_wall_clone_0_clone_0
-    namespace: wall
-    tag: 4
-  - model_name: grey_wall_clone_1_clone
-    namespace: wall
-    tag: 5
-  - model_name: grey_wall_clone_1_clone_0
-    namespace: wall
-    tag: 6
-  - model_name: grey_wall_clone_1_clone_0_clone_0
-    namespace: wall
-    tag: 7
-  - model_name: grey_wall_clone_0_clone_clone
-    namespace: wall
-    tag: 8
-  - model_name: grey_wall_clone_0_clone_1
-    namespace: wall
-    tag: 9
-
   - model_name: fire_hydrant
     namespace: goal
     tag: 0
+  - model_name: c_fire_hydrant
+    namespace: goal
+    tag: 1

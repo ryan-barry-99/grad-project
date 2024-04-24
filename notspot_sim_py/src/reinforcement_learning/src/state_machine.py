@@ -4,10 +4,11 @@ import rospy
 import rospkg
 from geometry_msgs.msg import PoseStamped, Point32, Twist
 from reinforcement_learning.msg import Heuristic
-from std_msgs.msg import Float32, Bool, String
+from std_msgs.msg import Float32, Bool, String, Int32
 import sensor_msgs.point_cloud2 as pc2
 from sensor_msgs.msg import PointCloud2, PointCloud
 import numpy as np
+import random
 
 NUM_POSES_TRACKED = 60
 NOT_MOVING_POSES = 2
@@ -18,7 +19,8 @@ class StateMachine:
         self.states = ["hits_wall", "reach_goal", "not_moving", "stuck"]
         self.reward_pub = rospy.Publisher('/RL/states/reward', String, queue_size=10)
 
-        rospy.Subscriber('/heuristic/goal/0', Heuristic, self.goal_callback)
+        rospy.Subscriber('/heuristic/goal/0', Heuristic, self.goal0_callback)
+        rospy.Subscriber('/heuristic/goal/1', Heuristic, self.goal1_callback)
         self.atGoal = False
         self.init_goal_dist = None
         self.goal_dist = Heuristic()
@@ -34,6 +36,7 @@ class StateMachine:
         self.step_pub = rospy.Publisher('/RL/step', Bool, queue_size=1)
         self.dist_pub = rospy.Publisher('/RL/reward/dist', Float32, queue_size=10)
         self.start_dist_pub = rospy.Publisher('RL/reward/start_dist', Float32, queue_size=10)
+        self.environment_pub = rospy.Publisher('/RL/environment', Int32, queue_size=1)
         
         rospy.Subscriber("/cmd_vel", Twist, self.velo_callback)
         rospy.Subscriber('/RL/episode/new', Bool, self.new_episode_callback)
@@ -41,10 +44,11 @@ class StateMachine:
         self.poses_tracked = []
         self.newStep = False
         self.checking = False
+        self.environment = 1
         self.point_cloud = PointCloud()
         self.velo = Twist()
 
-        self.wall_indices = [
+        self.wall_indices0 = [
             [0.92, 1.125],
             [0.92, -1.125],
             [-10.33, -1.125],
@@ -56,9 +60,40 @@ class StateMachine:
             [-8.34, 0.98],
             [-8.34, 2.48]
         ]
+        self.wall_indices1 = [
+            [0.92, -8.875],
+            [0.92, -11.125],
+            [-10.33, -11.125],
+            [-10.33, -5.875],
+            [-2.83, -5.875],
+            [-2.83, -8.875],
+            [-4.59, -7.52],
+            [-4.59, -9.02],
+            [-8.34, -9.02],
+            [-8.34, -7.52]
+        ]
 
         rospy.spin()
 
+    def check_wall(self):
+        pos = self.poses_tracked[-1].pose.position
+        x, y = pos.x, pos.y
+        thres = 0.5
+        if self.environment == 0:
+            env = self.wall_indices0
+        else:
+            env = self.wall_indices1
+        if y < env[1][1] + thres or x < env[2][0] + thres or y > env[3][1] - thres:
+            self.reward_pub.publish("hits_wall")
+            return
+        if x > env[4][0] - thres:
+            if x > env[0][0] - thres or y > env[0][1] - thres:
+                self.reward_pub.publish("hits_wall")
+                return
+        if y < env[6][1] + thres and y > env[7][1] - thres and x < env[6][0] + thres and x > env[8][0] - thres:
+            self.reward_pub.publish("hits_wall")
+            return
+        
     def timer_callback(self, event):
         self.step_pub.publish(True)
         self.newStep = True
@@ -66,15 +101,27 @@ class StateMachine:
         self.check_movement()
 
 
-    def goal_callback(self, msg: Heuristic):
-        self.goal_dist = msg
-        if self.init_goal_dist is None:
-            self.init_goal_dist = msg.manhattan_distance
-        if not self.atGoal and msg.manhattan_distance < 1:
-            self.atGoal = True
-            self.reward_pub.publish("reach_goal")
-        elif msg.manhattan_distance > 1:
-            self.atGoal = False
+    def goal0_callback(self, msg: Heuristic):
+        if self.environment == 0:
+            self.goal_dist = msg
+            if self.init_goal_dist is None:
+                self.init_goal_dist = msg.manhattan_distance
+            if not self.atGoal and msg.manhattan_distance < 1:
+                self.atGoal = True
+                self.reward_pub.publish("reach_goal")
+            elif msg.manhattan_distance > 1:
+                self.atGoal = False
+
+    def goal1_callback(self, msg: Heuristic):
+        if self.environment == 1:
+            self.goal_dist = msg
+            if self.init_goal_dist is None:
+                self.init_goal_dist = msg.manhattan_distance
+            if not self.atGoal and msg.manhattan_distance < 1:
+                self.atGoal = True
+                self.reward_pub.publish("reach_goal")
+            elif msg.manhattan_distance > 1:
+                self.atGoal = False
 
     def robot_pose_callback(self, msg: PoseStamped):
         if self.newStep:
@@ -102,12 +149,13 @@ class StateMachine:
                 #     rospy.loginfo(f"{self.old_goal_dist.manhattan_distance < self.goal_dist.manhattan_distance}")
                 # rospy.loginfo(f"old: {self.old_goal_dist}\nnew: {self.goal_dist}")
                 # rospy.loginfo(f"{type(self.old_goal_dist.manhattan_distance)},  {type(self.goal_dist.manhattan_distance)}")
-                if self.init_goal_dist is not None and self.goal_dist.manhattan_distance < self.min_goal_dist:
+                if self.init_goal_dist is not None and self.goal_dist.manhattan_distance - self.min_goal_dist < 0:
+                    self.reward_pub.publish(f"moving_forward/{self.goal_dist.manhattan_distance - self.min_goal_dist}")
+                    # self.reward_pub.publish(f"{self.goal_dist.manhattan_distance - self.min_goal_dist}")
                     self.min_goal_dist = self.goal_dist.manhattan_distance
-                    self.reward_pub.publish("moving_forwards")
                 self.old_goal_dist = self.goal_dist
 
-                if dist < 0.75:
+                if dist < 2:
                     self.dist_pub.publish(dist)
                     if abs(new_orient.x) < 0.1 and abs(new_orient.y) < 0.1 and len(self.poses_tracked) >= NOT_MOVING_POSES:
                         self.reward_pub.publish("upright")
@@ -143,6 +191,9 @@ class StateMachine:
     def new_episode_callback(self, msg):
         self.max_start_dist = 0
         self.min_goal_dist = np.inf
+        self.environment = random.choice([0, 1])
+        self.environment_pub.publish(self.environment)
+    
 
 
     def calc_dist(self, pos1, pos2):
@@ -151,20 +202,6 @@ class StateMachine:
     def calc_manhattan_dist(self, pos1, pos2):
         return abs(pos2.x - pos1.x) + abs(pos2.y - pos1.y)
     
-    def check_wall(self):
-        pos = self.poses_tracked[-1].pose.position
-        x, y = pos.x, pos.y
-        thres = 0.5
-        if y < -1.125 + thres or x < -10.33 + thres or y > 4.125 - thres:
-            self.reward_pub.publish("hits_wall")
-            return
-        if x > -2.83 - thres:
-            if x > 0.92 - thres or y > 1.125 - thres:
-                self.reward_pub.publish("hits_wall")
-                return
-        if y < 2.48 + thres and y > 0.98 - thres and x < -4.59 + thres and x > -8.34 - thres:
-            self.reward_pub.publish("hits_wall")
-            return
 
 
 

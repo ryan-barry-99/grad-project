@@ -6,7 +6,7 @@ from gazebo_msgs.msg import ModelState
 from gazebo_msgs.srv import SetModelState
 from geometry_msgs.msg import Pose, Point, Quaternion
 from tf.transformations import quaternion_from_euler
-from std_msgs.msg import String
+from std_msgs.msg import String, Int32
 import subprocess
 import random
 
@@ -15,6 +15,7 @@ class RobotSpawner:
         rospy.init_node('robot_reset')
         rospy.Subscriber('/robot_reset_command', String, self.reset_callback)
         rospy.Subscriber('/robot_reset_position', Pose, self.pose_callback)
+        rospy.Subscriber('/RL/environment', Int32, self.environment_callback)
 
         self.rospack = rospkg.RosPack()
         self.urdf_path = self.rospack.get_path('notspot_description') + '/urdf/notspot.urdf'
@@ -29,7 +30,11 @@ class RobotSpawner:
 
         rospy.spin()
 
-
+    def environment_callback(self, msg):
+        if msg.data == 0:
+            self.pose = Pose(position=Point(0.0, 0.0, 0.15), orientation=Quaternion(0.0, 0.0, 0.0, 1.0))
+        else:
+            self.pose = Pose(position=Point(0.0, -10.0, 0.15), orientation=Quaternion(0.0, 0.0, 0.0, 1.0))
     def set_robot_pose(self):
         try:
             set_state_msg = ModelState()

@@ -9,7 +9,7 @@ from cv_bridge import CvBridge, CvBridgeError
 import torch
 from reinforcement_learning.msg import Heuristic
 from geometry_msgs.msg import Twist
-from std_msgs.msg import String, Bool, Float32
+from std_msgs.msg import String, Bool, Float32, Int32
 from navigation_networks import PolicyNetwork
 from functools import partial
 from geometry_msgs.msg import PoseStamped, Pose
@@ -107,6 +107,7 @@ class ProximalPolicyOptimization:
         self.ending_goal = np.inf
         self.max_start_dist = 0
         self.starting_distance = 0
+        self.environment = 0
         self.initialize_episodes()
         self.experiences = {}
         self.buffer = ExperienceBuffer(
@@ -125,13 +126,15 @@ class ProximalPolicyOptimization:
         rospy.Subscriber('/notspot_imu/base_link_orientation', Imu, self.imu_callback)
         rospy.Subscriber('/AI_Control', Bool, self.control_type_callback)
         rospy.Subscriber('/RL/step', Bool, self.step_callback)
-        rospy.Subscriber('/RL/reward/action', Float32, self.update_reward) 
+        rospy.Subscriber('/RL/reward/action', Float32, self.update_reward)  
         rospy.Subscriber('/RL/episode/new', Bool, self.new_episode_callback)
         rospy.Subscriber('/RL/model/save', String, self.save_model_callback)
         rospy.Subscriber('/RL/states/reward', String, self.states_callback)
-        rospy.Subscriber('/heuristic/goal/0', Heuristic, self.goal_callback)
+        rospy.Subscriber('/heuristic/goal/0', Heuristic, self.goal0_callback)
+        rospy.Subscriber('/heuristic/goal/1', Heuristic, self.goal1_callback)
         rospy.Subscriber('/RL/reward/dist', Float32, self.dist_callback)
         rospy.Subscriber('RL/reward/start_dist', Float32, self.start_dist_callback)
+        rospy.Subscriber('/RL/environment', Int32, self.environment_callback)
 
         # Initialize the heuristic tensor
         self.heuristic_tensor = torch.zeros(num_goals, 3)  # Initialize with zeros
@@ -139,6 +142,8 @@ class ProximalPolicyOptimization:
         # Start ROS node
         rospy.spin()
 
+    def environment_callback(self, msg):
+        self.environment = msg.data
 
     def step_callback(self, msg: Bool):
         if msg.data:
@@ -457,13 +462,14 @@ class ProximalPolicyOptimization:
         if self.old_position is not None:
             # Calculate distance traveled from the old position to the current position
             distance_traveled = self.calculate_distance(self.old_position, position)
-            self.total_distance_traveled += distance_traveled
+            if distance_traveled < 3:
+                self.total_distance_traveled += distance_traveled
         else:
             distance_traveled = 0
         
         # Update the old position with the current position
         self.old_position = position
-        self.position_tensor = torch.tensor([[distance_traveled, self.closest_goal, self.max_start_dist]])
+        self.position_tensor = torch.tensor([[distance_traveled, self.closest_goal]])
 
     def calculate_distance(self, pos1, pos2):
         distance = ((pos2.x - pos1.x) ** 2 + (pos2.y - pos1.y) ** 2) ** 0.5
@@ -487,6 +493,7 @@ class ProximalPolicyOptimization:
         if self.go:
             self.rewards += msg.data
             self.total_rewards += msg.data
+
     
     def states_callback(self, msg: String):
         if msg.data == "reach_goal":
@@ -501,12 +508,21 @@ class ProximalPolicyOptimization:
         save_model(self.policy_network, f"{self.models_folder}/policy_{msg.data}")
         # save_model(self.value_network, f"{self.models_folder}/value_{msg.data}")
 
-    def goal_callback(self, msg: Heuristic):
-        self.goal_dist = msg.manhattan_distance
-        if msg.manhattan_distance < self.closest_goal:
-            self.closest_goal = msg.manhattan_distance
-        if msg.manhattan_distance > self.furthest_goal:
-            self.furthest_goal = msg.manhattan_distance
+    def goal0_callback(self, msg: Heuristic):
+        if self.environment == 0:
+            self.goal_dist = msg.manhattan_distance
+            if msg.manhattan_distance < self.closest_goal:
+                self.closest_goal = msg.manhattan_distance
+            if msg.manhattan_distance > self.furthest_goal and msg.manhattan_distance < 15:
+                self.furthest_goal = msg.manhattan_distance
+
+    def goal1_callback(self, msg: Heuristic):
+        if self.environment == 1:
+            self.goal_dist = msg.manhattan_distance
+            if msg.manhattan_distance < self.closest_goal:
+                self.closest_goal = msg.manhattan_distance
+            if msg.manhattan_distance > self.furthest_goal and msg.manhattan_distance < 15:
+                self.furthest_goal = msg.manhattan_distance
 
     def dist_callback(self, msg: Float32):
         self.dist = msg.data
