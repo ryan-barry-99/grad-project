@@ -433,8 +433,8 @@
     <atmosphere type='adiabatic'/>
     <physics type='ode'>
       <max_step_size>0.001</max_step_size>
-      <real_time_factor>1</real_time_factor>
-      <real_time_update_rate>1000</real_time_update_rate>
+      <real_time_factor>7</real_time_factor>
+      <real_time_update_rate>7000</real_time_update_rate>
     </physics>
     <scene>
       <ambient>0.4 0.4 0.4 1</ambient>
@@ -1811,10 +1811,10 @@
         </link>
       </model>
       <model name='c_fire_hydrant'>
-        <pose>-9.15161 -10.1685 0 0 -0 0</pose>
+        <pose>-9 -10 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>-9.15161 -10.1685 0 0 -0 0</pose>
+          <pose>-9 -10 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -1975,10 +1975,10 @@
         </link>
       </model>
       <model name='fire_hydrant'>
-        <pose>-9.15161 0.000965 0 0 -0 0</pose>
+        <pose>-9 0 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>-9.15161 0.000965 0 0 -0 0</pose>
+          <pose>-9 0 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>

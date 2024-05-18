@@ -4,6 +4,8 @@
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
       <arg name="world_name" value="$(find notspot_gazebo)/launch/world/P3.world"/>
       <arg name="use_sim_time" value="true"/>
+      <!-- Set Gazebo to run in headless mode -->
+      <arg name="gui" value="false"/>
     </include>
 
     <!-- Robot -->

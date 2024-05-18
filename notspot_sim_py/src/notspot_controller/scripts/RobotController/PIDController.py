@@ -40,7 +40,7 @@ class PID_controller(object):
                 self.I_term[i] = self.max_I
 
         # approximate first derivate
-        self.D_term = (error - self.last_error) / step
+        self.D_term = (error - self.last_error) / max(step, 0.0001)
 
         # update last values 
         self.last_time = t_now

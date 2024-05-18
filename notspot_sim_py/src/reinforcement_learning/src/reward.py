@@ -48,7 +48,7 @@ class Reward:
     def new_episode_callback(self, msg: Bool):
         self.new_episode = msg.data
         if self.new_episode:
-            if self.episode_num % 50 == 0:
+            if self.episode_num % 250 == 0:
                 self.save_model_pub.publish(f"episode_{self.episode_num}.pt")
             self.episode_num += 1
             self.total_reward = Float32()
@@ -78,11 +78,11 @@ class Reward:
 
     def calc_reward(self, msg: String):
         self.rewards = {
-            "hits_wall": -1,
-            "reach_goal": 1,
+            # "hits_wall": -10,
+            "reach_goal": 100,
             # "not_moving": 0,
             # "upright": 0,
-            "fell": -1,
+            # "fell": -1,
             # "moving_forward": 0.1,
             # "moving_backward": 0
         }
@@ -93,6 +93,7 @@ class Reward:
         if msg.data == "upright":
             self.upright = True
 
+        max_reward = 10
         if "moving_forward" in msg.data:
             split_string = msg.data.split('/')
 
@@ -103,32 +104,55 @@ class Reward:
             # Convert to float
             if dist is not None:
                 try:
-                    if abs(dist) < 5:
-                        reward = abs(dist)
+                    if abs(dist) < 9.5 and abs(dist) > 0.0001:
+                        reward = 1
+                        # if reward > 0.5:
+                        #     # reward = 1
+                        #     reward = 1/(1+abs(dist)*100)
+                        #     # reward = 10
                         self.total_reward.data += reward
                         self.publishers['action_reward'].publish(reward)
                 except ValueError:
                     rospy.loginfo("Cannot convert to float. The string after the slash is not a number.")
                     
-    
-        if msg.data == "not_moving":
-            distance_threshold = 1 # Threshold for minimum distance moved
-            max_penalty = -1.0  # Maximum penalty value
+        if "moving_backward" in msg.data:
+            split_string = msg.data.split('/')
 
-            # Calculate the penalty based on the distance moved
-            penalty = -distance_threshold / max(distance_threshold - abs(self.dist), 0.001)  # Ensure non-zero denominator
+            # Get the part to the right of the slash
+            right_of_slash = split_string[1] if len(split_string) > 1 else None
+            dist = float(right_of_slash)
             
-            # Clip the penalty to ensure it does not exceed the maximum penalty
-            penalty = min(penalty, max_penalty)
+            # Convert to float
+            if dist is not None:
+                try:
+                    if abs(dist) < 9.5:
+                        # reward = -(max_reward - (abs(dist) / 9) * max_reward)
+                        # reward = -1/(1+abs(dist)*100)
+                        reward = -2
+                        self.total_reward.data += reward
+                        self.publishers['action_reward'].publish(reward)
+                except ValueError:
+                    rospy.loginfo("Cannot convert to float. The string after the slash is not a number.")
+        # if msg.data == "not_moving":
+        #     distance_threshold = 0.1 # Threshold for minimum distance moved
+        #     max_penalty = -1.0  # Maximum penalty value
 
-            penalty /= 100
-            self.publishers['action_reward'].publish(penalty)
-            self.total_reward.data += penalty
+        #     # Calculate the penalty based on the distance moved
+        #     penalty = -distance_threshold / max(distance_threshold - abs(self.dist), 0.001)  # Ensure non-zero denominator
+            
+        #     # Clip the penalty to ensure it does not exceed the maximum penalty
+        #     penalty = min(penalty, max_penalty)
+
+        #     penalty /= 10
+        #     # self.publishers['action_reward'].publish(penalty)
+        #     self.total_reward.data += penalty
             
         
-        self.publishers['total_reward'].publish(self.total_reward)
         if msg.data == "reach_goal" or msg.data == "stuck" or msg.data == "fell":
             self.new_episode_pub.publish(True)
+
+        self.publishers['total_reward'].publish(self.total_reward)
+
 
     def dist_callback(self, msg: Float32):
         self.dist = msg.data

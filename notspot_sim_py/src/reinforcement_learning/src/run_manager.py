@@ -12,7 +12,8 @@ class RunsManager:
         rospy.init_node("run_manager")
 
         self.rospack = rospkg.RosPack()
-        self.runs_folder = self.rospack.get_path('reinforcement_learning') + '/runs'
+        self.runs_folder = '/media/ryan/Media/Grad_Project/runs'
+        self.runs_folder = '/media/ryan/Media/Grad_Project/runs'
 
         self.init_rewards_dir = False
         self.init_runs_folder = False

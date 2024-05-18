@@ -11,7 +11,7 @@ import numpy as np
 import random
 
 NUM_POSES_TRACKED = 60
-NOT_MOVING_POSES = 5
+NOT_MOVING_POSES = 2
 
 class StateMachine:
     def __init__(self):
@@ -24,6 +24,7 @@ class StateMachine:
         self.atGoal = False
         self.init_goal_dist = None
         self.goal_dist = Heuristic()
+        self.old_goal_dist = Heuristic()
         self.min_goal_dist = np.inf
 
         rospy.Subscriber('/gazebo/model_poses/robot/notspot', PoseStamped, self.robot_pose_callback)
@@ -111,6 +112,7 @@ class StateMachine:
             self.goal_dist = msg
             if self.init_goal_dist is None:
                 self.init_goal_dist = msg.manhattan_distance
+                self.old_goal_dist = msg
             if not self.atGoal and msg.manhattan_distance < 1:
                 self.atGoal = True
                 self.reward_pub.publish("reach_goal")
@@ -122,6 +124,7 @@ class StateMachine:
             self.goal_dist = msg
             if self.init_goal_dist is None:
                 self.init_goal_dist = msg.manhattan_distance
+                self.old_goal_dist = msg
             if not self.atGoal and msg.manhattan_distance < 1:
                 self.atGoal = True
                 self.reward_pub.publish("reach_goal")
@@ -154,13 +157,41 @@ class StateMachine:
                 #     rospy.loginfo(f"{self.old_goal_dist.manhattan_distance < self.goal_dist.manhattan_distance}")
                 # rospy.loginfo(f"old: {self.old_goal_dist}\nnew: {self.goal_dist}")
                 # rospy.loginfo(f"{type(self.old_goal_dist.manhattan_distance)},  {type(self.goal_dist.manhattan_distance)}")
-                if self.init_goal_dist is not None and self.goal_dist.manhattan_distance - self.min_goal_dist < 0:
-                    self.reward_pub.publish(f"moving_forward/{abs(self.goal_dist.manhattan_distance - self.min_goal_dist)}")
-                    # self.reward_pub.publish(f"{self.goal_dist.manhattan_distance - self.min_goal_dist}")
-                    self.min_goal_dist = self.goal_dist.manhattan_distance
+                # if self.init_goal_dist is not None and self.goal_dist.manhattan_distance - self.min_goal_dist < 0:
+                #     self.reward_pub.publish(f"moving_forward/{(self.goal_dist.manhattan_distance - self.min_goal_dist)}")
+                # if self.goal_dist.x_distance > 0.5:
+                #     if self.init_goal_dist is not None and self.old_goal_dist is not None and self.goal_dist.x_distance - self.old_goal_dist.x_distance < 0:
+                #         self.reward_pub.publish(f"moving_forward/{(self.goal_dist.x_distance)}")
+                #         # self.reward_pub.publish(f"{self.goal_dist.manhattan_distance - self.min_goal_dist}")
+                #         if self.goal_dist.x_distance < self.min_goal_dist:
+                #             self.min_goal_dist = self.goal_dist.x_distance
+
+                #     if self.init_goal_dist is not None and self.old_goal_dist is not None and self.goal_dist.x_distance - self.old_goal_dist.x_distance > 0:
+                #         self.reward_pub.publish(f"moving_backward/{(self.goal_dist.x_distance)}")
+                
+                if self.goal_dist.x_distance > 0.5:
+                    if self.init_goal_dist is not None and self.min_goal_dist is not None and self.goal_dist.x_distance - self.min_goal_dist < 0:
+                        self.reward_pub.publish(f"moving_forward/{(self.goal_dist.x_distance)}")
+                        # self.reward_pub.publish(f"{self.goal_dist.manhattan_distance - self.min_goal_dist}")
+                        if self.goal_dist.x_distance < self.min_goal_dist:
+                            self.min_goal_dist = self.goal_dist.x_distance
+
+                    if self.init_goal_dist is not None and self.min_goal_dist is not None and self.goal_dist.x_distance - self.min_goal_dist > 0:
+                        self.reward_pub.publish(f"moving_backward/{(self.goal_dist.x_distance)}")
+                
+                else:
+                    if self.init_goal_dist is not None and self.old_goal_dist is not None and self.goal_dist.y_distance - self.old_goal_dist.y_distance < 0:
+                        self.reward_pub.publish(f"moving_forward/{(self.goal_dist.y_distance)}")
+                        # self.reward_pub.publish(f"{self.goal_dist.manhattan_distance - self.min_goal_dist}")
+                        if self.goal_dist.y_distance < self.min_goal_dist:
+                            self.min_goal_dist = self.goal_dist.y_distance
+
+                    if self.init_goal_dist is not None and self.old_goal_dist is not None and self.goal_dist.y_distance - self.old_goal_dist.y_distance > 0:
+                        self.reward_pub.publish(f"moving_backward/{(self.goal_dist.y_distance)}")
                 self.old_goal_dist = self.goal_dist
 
-                if dist < 1:
+
+                if dist < 0.1:
                     self.dist_pub.publish(dist)
                     if abs(new_orient.x) < 0.1 and abs(new_orient.y) < 0.1 and len(self.poses_tracked) >= NOT_MOVING_POSES:
                         self.reward_pub.publish("upright")
@@ -187,7 +218,7 @@ class StateMachine:
 
                 dist = self.calc_dist(old_pos, new_pos)
 
-                if dist < 0.25:
+                if dist < 0.1:
                     self.reward_pub.publish("stuck")
                     self.poses_tracked = []
 

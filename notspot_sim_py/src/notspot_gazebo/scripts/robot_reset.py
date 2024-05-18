@@ -31,10 +31,35 @@ class RobotSpawner:
         rospy.spin()
 
     def environment_callback(self, msg):
-        if msg.data == 0:
-            self.pose = Pose(position=Point(0.0, 0.0, 0.15), orientation=Quaternion(0.0, 0.0, 0.0, 1.0))
-        else:
-            self.pose = Pose(position=Point(0.0, -10.0, 0.15), orientation=Quaternion(0.0, 0.0, 0.0, 1.0))
+        random_z_rotation = 3.14159
+        # axis = random.choice([0,1,2,3])
+        # if axis == 0:
+        #     x_start = random.uniform(0, -4.5)
+        #     y_start = 0
+        # elif axis == 1:
+        #     x_start = random.uniform(-3.25, -4)
+        #     y_start = random.uniform(0,3.5)
+        # elif axis == 2:
+        #     x_start = random.uniform(-3.25, -4.5)
+        #     y_start = random.uniform(2.5, 3.5)
+        # elif axis == 3:
+        #     x_start = random.uniform(-8.5,-9.5)
+        #     y_start = random.uniform(1, 3.5)
+        x_start = 0
+        y_start = 0
+
+        if msg.data == 1:
+            y_start -= 10
+
+        quaternion = quaternion_from_euler(0, 0, random_z_rotation)
+        self.pose = Pose(position=Point(x_start, y_start, 0.15), orientation=Quaternion(*quaternion))
+        
+        # if msg.data == 0:
+        #     quaternion = quaternion_from_euler(0, 0, random_z_rotation)
+        #     self.pose = Pose(position=Point(x_start, 0.0, 0.15), orientation=Quaternion(*quaternion))
+        # else:
+        #     quaternion = quaternion_from_euler(0, 0, random_z_rotation)
+        #     self.pose = Pose(position=Point(x_start, -10.0, 0.15), orientation=Quaternion(*quaternion))
     def set_robot_pose(self):
         try:
             set_state_msg = ModelState()
@@ -53,7 +78,9 @@ class RobotSpawner:
 
     def pose_callback(self, data):
             # Generate a random Z rotation (in radians)
-            random_z_rotation = random.uniform(0, 2 * 3.14159)
+            # random_z_rotation = random.uniform(0, 2 * 3.14159)
+            random_z_rotation = 3.14159
+            
 
             # Convert the random Z rotation to a quaternion
             quaternion = quaternion_from_euler(0, 0, random_z_rotation)

@@ -10,7 +10,7 @@ import torch
 from reinforcement_learning.msg import Heuristic
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String, Bool, Float32, Int32
-from navigation_networks import PolicyNetwork
+from navigation_networks import PolicyNetwork, ValueNetwork
 from functools import partial
 from geometry_msgs.msg import PoseStamped, Pose
 from sensor_msgs.msg import Imu
@@ -25,16 +25,20 @@ class ProximalPolicyOptimization:
     def __init__(self):
         # Initialize ROS node
         rospy.init_node('policy_node', anonymous=True)
+        # Check for cuda and set device
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+        self.reset_lstm()
 
-        self.policy_network = PolicyNetwork()
-        # self.value_network = ValueNetwork()
+        self.policy_network = PolicyNetwork(self.policy_hidden_size)
+        self.value_network = ValueNetwork(self.value_hidden_size)
         
         # Load hyperparameters from YAML file
         self.hyperparameters = rospy.get_param('/policy_network/hyperparameters', default={})
 
         self.rospack = rospkg.RosPack()
-        self.runs_folder = self.rospack.get_path('reinforcement_learning') + '/runs/' + self.hyperparameters['run']
+        # self.runs_folder = self.rospack.get_path('reinforcement_learning') + '/runs/' + self.hyperparameters['run']
+        self.runs_folder = '/media/ryan/Media/Grad_Project/runs/' + self.hyperparameters['run']
         
         # Check if a model should be loaded
         load_model = self.hyperparameters["load_model"]
@@ -45,9 +49,9 @@ class ProximalPolicyOptimization:
             rospy.set_param('/RL/runs/run_folder', f"{self.runs_folder}")
             rospy.set_param('/RL/runs/new_run', False)
             policy_model_path = f"{self.runs_folder}/models/{self.hyperparameters['policy_model_path']}"
-            # value_model_path = f"{self.runs_folder}/models/{self.hyperparameters['value_model_path']}"
+            value_model_path = f"{self.runs_folder}/models/{self.hyperparameters['value_model_path']}"
             self.policy_network.load_state_dict(torch.load(policy_model_path))
-            # self.value_network.load_state_dict(torch.load(value_model_path))
+            self.value_network.load_state_dict(torch.load(value_model_path))
 
         got_loss_folder = False
         while not got_loss_folder:
@@ -56,8 +60,6 @@ class ProximalPolicyOptimization:
                 self.num_updates = int(len(os.listdir(self.loss_folder))/2)
                 got_loss_folder = True
 
-        # Check for cuda and set device
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         
         # Initialize policy and value networks
         self.policy_optimizer = set_optimizer(
@@ -68,12 +70,12 @@ class ProximalPolicyOptimization:
             )
         self.policy_network.to(self.device)
         
-        # self.value_optimizer = set_optimizer(
-        #     model=self.value_network, 
-        #     optimizer=self.hyperparameters["optimizer"],
-        #     lr=self.hyperparameters["lr_value"]
-        #     )
-        # self.value_network.to(self.device)
+        self.value_optimizer = set_optimizer(
+            model=self.value_network, 
+            optimizer=self.hyperparameters["optimizer"],
+            lr=self.hyperparameters["lr_value"]
+            )
+        self.value_network.to(self.device)
         
         # Initialize ROS publishers
         self.image_pub = rospy.Publisher("/occupancy_image", Image, queue_size=10)
@@ -122,9 +124,9 @@ class ProximalPolicyOptimization:
         )
 
          # Initialize ROS subscribers
-        num_goals = 1
-        for i in range(num_goals):
-            rospy.Subscriber(f'heuristic/goal/{i}', Heuristic, partial(self.heuristic_callback, goal=i))
+        # num_goals = 1
+        # for i in range(num_goals):
+        #     rospy.Subscriber(f'heuristic/goal/{i}', Heuristic, partial(self.heuristic_callback, goal=i))
         rospy.Subscriber('/realsense/color/image_raw', Image, self.rgb_image_callback)
         rospy.Subscriber('/realsense/depth/image_raw', Image, self.depth_image_callback)
         rospy.Subscriber('/occupancy_grid/velodyne', OccupancyGrid, self.occupancy_grid_callback)
@@ -142,11 +144,30 @@ class ProximalPolicyOptimization:
         rospy.Subscriber('RL/reward/start_dist', Float32, self.start_dist_callback)
         rospy.Subscriber('/RL/environment', Int32, self.environment_callback)
 
-        # Initialize the heuristic tensor
-        self.heuristic_tensor = torch.zeros(num_goals, 3)  # Initialize with zeros
+        # Initialize the tensors
+        self.heuristic_tensor = torch.zeros(1, 3)  # Initialize with zeros
+        self.position_tensor = torch.zeros(1, 3)  # Initialize with zeros
         
         # Start ROS node
         rospy.spin()
+
+    def reset_lstm(self):
+        num_policy_layers = 3
+        self.policy_hidden_size = 256
+        num_value_layers = 3
+        self.value_hidden_size = 64 
+
+        # Initialize hidden states for each layer
+        self.policy_hidden_layers = [(
+            torch.zeros(1, self.policy_hidden_size).to(self.device),
+            torch.zeros(1, self.policy_hidden_size).to(self.device)
+        )] * num_policy_layers
+
+        self.value_hidden_layers = [(
+            torch.zeros(1, self.value_hidden_size).to(self.device),
+            torch.zeros(1, self.value_hidden_size).to(self.device)
+        )] * num_value_layers
+
 
     def environment_callback(self, msg):
         self.environment = msg.data
@@ -156,9 +177,7 @@ class ProximalPolicyOptimization:
             if self.new_episode:
                 self.go = False
                 self.getPosition = False
-                with open(f'{self.rewards_folder}/episode_{self.episode_num}.txt', 'w') as f:
-                    f.write(f"{self.total_rewards}")
-                    self.total_rewards = 0
+                
                 with open(f'{self.steps_folder}/episode_{self.episode_num}.txt', 'w') as file:
                     file.write(f"{self.lifespan}")
                 with open(f'{self.goal_folder}/episode_{self.episode_num}.txt', 'w') as file:
@@ -177,20 +196,20 @@ class ProximalPolicyOptimization:
                     file.write(f"{self.last_known_environment}")
                     self.last_known_environment = self.environment
                 self.episode_num += 1
-                rospy.loginfo(f"Starting episode {self.episode_num}")
+                rospy.loginfo(f"Starting Trajectory {self.episode_num}")
                 if self.buffer.length >= 1:
                     self.lifespan = 0
                     self.new_episode = False
-                    self.update_networks(batch_size=self.buffer.length)
-                    self.buffer.clear()
+                    # self.update_networks(batch_size=self.buffer.length)
+                    # self.buffer.clear()
                     if not self.models_folder:
                         if rospy.has_param('/RL/runs/models_folder'):
                             self.models_folder = rospy.get_param('/RL/runs/models_folder')
                             save_model(self.policy_network, f"{self.models_folder}/latest_policy.pt")
-                            # save_model(self.value_network, f"{self.models_folder}/latest_value.pt")
+                            save_model(self.value_network, f"{self.models_folder}/latest_value.pt")
                     if self.models_folder is not None:
                         save_model(self.policy_network, f"{self.models_folder}/latest_policy.pt")
-                        # save_model(self.value_network, f"{self.models_folder}/latest_value.pt")
+                        save_model(self.value_network, f"{self.models_folder}/latest_value.pt")
                 self.new_episode = False       
             self.steps_since_update += 1
             if self.steps_since_update >= 4: 
@@ -214,10 +233,12 @@ class ProximalPolicyOptimization:
                         "wall": self.wall_tensor.to(self.device)
                     }
                 self.hits_wall = False
-                mean, std, value = self.policy(self.experiences)
+                mean, std = self.policy(self.experiences, self.policy_hidden_layers)
                 velocity_vector, self.log_probs = self.sample_velocity(mean, std)
-                velocity_vector = torch.tensor(self.prep_velo(velocity_vector), requires_grad=True).to(self.device).unsqueeze(0)
-                value = value.cpu().squeeze().tolist()
+                velocity_vector = torch.tensor(self.prep_velo(velocity_vector), requires_grad=True).unsqueeze(0).to(self.device)
+                # rospy.loginfo(velocity_vector)
+                value = self.value(self.experiences, velocity_vector, self.value_hidden_layers)
+                # value = value.cpu().squeeze().tolist()
                 # value = self.value(self.experiences, velocity_vector).tolist()
                 self.buffer.store(state=self.experiences, action=velocity_vector, reward=self.rewards, log_prob = self.log_probs, value=value)
                 self.rewards=0
@@ -243,23 +264,27 @@ class ProximalPolicyOptimization:
 
 
             
-    def policy(self, experience):
+    def policy(self, experience, hidden_layers):
         """
         Use the policy network to predict velocity distributions of a state
         """
         self.policy_network.eval() # Set model to evaluation mode
         with torch.no_grad():
-            mean, std, value = self.policy_network(experience)
-        return mean, std, value
+            policy = self.policy_network(experience, hidden_layers)
+        return policy
     
-    # def value(self, experience, action):
-    #     """
-    #     Use the value network to estimate the value of a state, action pair
-    #     """
-    #     self.value_network.eval()
-    #     with torch.no_grad():
-    #         value = self.value_network(experience, action)
-    #     return value
+    def value(self, experience, action, hidden_layers):
+        """
+        Use the value network to estimate the value of a state, action pair
+        """
+        self.value_network.eval()
+        with torch.no_grad():
+            output = self.value_network(experience, action, hidden_layers)
+            value = torch.argmax(output, dim=1).item()
+            if value == 0:
+                return -2.0
+            if value == 1:
+                return 1.0
     
     def prep_velo(self, velocity_vector):
         # vx = -abs(velocity_vector[0][0]) + abs(velocity_vector[0][1])
@@ -336,6 +361,10 @@ class ProximalPolicyOptimization:
 
         with open(f'{self.loss_folder}/value/loss_{self.num_updates}.txt', 'w') as f:
             f.write(f"{value_loss}")
+
+        with open(f'{self.rewards_folder}/update_{self.num_updates}.txt', 'w') as f:
+            f.write(f"{self.total_rewards}\n{self.hyperparameters['max_trajectory_length']}")
+            self.total_rewards = 0
         
         self.num_updates += 1
 
@@ -345,12 +374,14 @@ class ProximalPolicyOptimization:
         self.policy_optimizer.step()
 
 
-        # policy_loss, value_loss = self.compute_loss(old_log_probs, new_log_probs, advantages, values, rewards)
+        policy_loss, value_loss = self.compute_loss(old_log_probs, new_log_probs, advantages, values, rewards)
 
-        # # Backpropagation and optimization for value network
-        # self.value_optimizer.zero_grad()
-        # value_loss.backward(retain_graph=True)
-        # self.value_optimizer.step()
+        # Backpropagation and optimization for value network
+        self.value_optimizer.zero_grad()
+        value_loss.backward(retain_graph=True)
+        self.value_optimizer.step()
+
+        self.reset_lstm()
 
 
     def compute_loss(self, old_log_probs, new_log_probs, advantages, values, rewards):
@@ -367,16 +398,20 @@ class ProximalPolicyOptimization:
         surr2 = (torch.clamp(ratio, 1.0 - clip_epsilon, 1.0 + clip_epsilon) * advantages).requires_grad_(True)
         policy_loss = -torch.min(surr1, surr2).mean()
 
-        # Compute value loss
-        discounted_rewards = []
-        running_reward = 0
-        for reward in reversed(rewards):
-            running_reward = reward + gamma * running_reward
-            discounted_rewards.insert(0, running_reward)
-
-        values = torch.tensor(values, requires_grad=True).reshape(-1)  # Reshape to match discounted_rewards
-        discounted_rewards = torch.tensor(discounted_rewards, requires_grad=True)
-        value_loss = F.mse_loss(values, discounted_rewards)
+        # # Compute value loss
+        # discounted_rewards = []
+        # running_reward = 0
+        # for reward in reversed(rewards):
+        #     running_reward = reward + gamma * running_reward
+        #     discounted_rewards.insert(0, running_reward)
+        # rospy.loginfo(values)
+        values = torch.tensor(values, dtype=torch.float, requires_grad=True).reshape(-1)  # Reshape to match discounted_rewards
+        # discounted_rewards = torch.tensor(discounted_rewards, requires_grad=True)
+        # value_loss = F.mse_loss(values, discounted_rewards)
+        # ground_truth = [1 for reward in rewards if reward > ]
+        rewards = [1 if reward > 0.5 else 0 for reward in rewards]
+        rewards = torch.tensor(rewards, dtype=torch.float)
+        value_loss = F.binary_cross_entropy(values, rewards)
 
         # Compute entropy regularization term
         entropy = -(new_log_probs.exp() * new_log_probs).sum(dim=-1).mean()  # Compute entropy of the action distribution
@@ -498,8 +533,6 @@ class ProximalPolicyOptimization:
             self.old_goal_dist = self.goal_dist
             self.position_tensor = torch.tensor([[distance_traveled, progress, self.closest_goal]])
             self.getPosition = False
-        else:
-            self.position_tensor = torch.tensor([[0, 0, self.closest_goal]])
 
     def calculate_distance(self, pos1, pos2):
         distance = ((pos2.x - pos1.x) ** 2 + (pos2.y - pos1.y) ** 2) ** 0.5
@@ -511,7 +544,12 @@ class ProximalPolicyOptimization:
             fell = 1
         else:
             fell = 0
-        self.orientation_tensor = torch.tensor([[orient.x, orient.y, orient.z, orient.w, fell]])
+        x = self.heuristic_tensor[0].cpu().tolist()[0]
+        y = self.heuristic_tensor[0].cpu().tolist()[1]
+
+        heading = float(np.arctan2(y,x)) - orient.z
+
+        self.orientation_tensor = torch.tensor([[heading]])
 
         ang_vel = msg.angular_velocity
         self.ang_vel_tensor = torch.tensor([[ang_vel.x, ang_vel.y, ang_vel.z]])
@@ -535,7 +573,7 @@ class ProximalPolicyOptimization:
         if msg.data == "reach_goal":
             self.goal = True
         if msg.data == "hits_wall":
-            self.wall_tensor = torch.tensor([[1]])
+            self.wall_tensor = torch.tensor([[-1]])
             self.hits_wall = True
 
     def new_episode_callback(self, msg):
@@ -545,10 +583,11 @@ class ProximalPolicyOptimization:
 
     def save_model_callback(self, msg: String):
         save_model(self.policy_network, f"{self.models_folder}/policy_{msg.data}")
-        # save_model(self.value_network, f"{self.models_folder}/value_{msg.data}")
+        save_model(self.value_network, f"{self.models_folder}/value_{msg.data}")
 
     def goal0_callback(self, msg: Heuristic):
         if self.environment == 0:
+            self.heuristic_tensor[0] = torch.tensor([msg.x_distance, msg.y_distance, msg.manhattan_distance])
             self.goal_dist = msg.manhattan_distance
             if msg.manhattan_distance < self.closest_goal:
                 self.closest_goal = msg.manhattan_distance
@@ -557,6 +596,7 @@ class ProximalPolicyOptimization:
 
     def goal1_callback(self, msg: Heuristic):
         if self.environment == 1:
+            self.heuristic_tensor[0] = torch.tensor([msg.x_distance, msg.y_distance, msg.manhattan_distance])
             self.goal_dist = msg.manhattan_distance
             if msg.manhattan_distance < self.closest_goal:
                 self.closest_goal = msg.manhattan_distance
