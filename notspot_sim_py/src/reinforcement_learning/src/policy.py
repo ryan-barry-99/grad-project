@@ -19,6 +19,7 @@ from experience_buffer import ExperienceBuffer
 import torch.nn.functional as F
 import os
 import rospkg
+import pickle
 
 
 class ProximalPolicyOptimization:
@@ -177,7 +178,11 @@ class ProximalPolicyOptimization:
             if self.new_episode:
                 self.go = False
                 self.getPosition = False
-                
+                if self.ending_goal < self.closest_goal:
+                    self.closest_goal = self.ending_goal
+                if self.ending_goal > self.furthest_goal:
+                    self.furthest_goal = self.ending_goal
+
                 with open(f'{self.steps_folder}/episode_{self.episode_num}.txt', 'w') as file:
                     file.write(f"{self.lifespan}")
                 with open(f'{self.goal_folder}/episode_{self.episode_num}.txt', 'w') as file:
@@ -194,7 +199,7 @@ class ProximalPolicyOptimization:
                     self.starting_distance = 0
                 with open(f'{self.environment_folder}/episode_{self.episode_num}.txt', 'w') as file:
                     file.write(f"{self.last_known_environment}")
-                    self.last_known_environment = self.environment
+                #     self.last_known_environment = self.environment
                 self.episode_num += 1
                 rospy.loginfo(f"Starting Trajectory {self.episode_num}")
                 if self.buffer.length >= 1:
@@ -281,6 +286,7 @@ class ProximalPolicyOptimization:
         with torch.no_grad():
             output = self.value_network(experience, action, hidden_layers)
             value = torch.argmax(output, dim=1).item()
+            return value
             if value == 0:
                 return -2.0
             if value == 1:
@@ -329,6 +335,7 @@ class ProximalPolicyOptimization:
     
     def advantage(self, rewards: list, values: list):
         T = len(rewards)
+        values = [-2 if val == 0 else 1 for val in values]
         values = np.array(values)
         advantages = np.zeros(T)
         gamma = self.hyperparameters['gamma']
@@ -350,12 +357,12 @@ class ProximalPolicyOptimization:
         return advantages
     
     def update_networks(self, batch_size=None):
-        _, _, rewards, old_log_probs, new_log_probs, values = self.buffer.get_batch(batch_size)
-        advantages = self.advantage(rewards=rewards, values=values)
-        
+        _, _, rewards, old_log_probs, new_log_probs, vals = self.buffer.get_batch(batch_size)
+        advantages = self.advantage(rewards=rewards, values=vals)
+        # rospy.loginfo(f"the values are {vals}")
         # policy_loss = self.compute_policy_loss(old_log_probs=old_log_probs, new_log_probs=new_log_probs, advantages=advantages)
         # value_loss = self.compute_value_loss(values=values, rewards=rewards)
-        policy_loss, value_loss = self.compute_loss(old_log_probs, new_log_probs, advantages, values, rewards)
+        policy_loss, value_loss = self.compute_loss(old_log_probs, new_log_probs, advantages, vals, rewards)
         with open(f'{self.loss_folder}/policy/loss_{self.num_updates}.txt', 'w') as f:
             f.write(f"{policy_loss}")
 
@@ -374,7 +381,7 @@ class ProximalPolicyOptimization:
         self.policy_optimizer.step()
 
 
-        policy_loss, value_loss = self.compute_loss(old_log_probs, new_log_probs, advantages, values, rewards)
+        policy_loss, value_loss = self.compute_loss(old_log_probs, new_log_probs, advantages, vals, rewards)
 
         # Backpropagation and optimization for value network
         self.value_optimizer.zero_grad()
@@ -398,19 +405,12 @@ class ProximalPolicyOptimization:
         surr2 = (torch.clamp(ratio, 1.0 - clip_epsilon, 1.0 + clip_epsilon) * advantages).requires_grad_(True)
         policy_loss = -torch.min(surr1, surr2).mean()
 
-        # # Compute value loss
-        # discounted_rewards = []
-        # running_reward = 0
-        # for reward in reversed(rewards):
-        #     running_reward = reward + gamma * running_reward
-        #     discounted_rewards.insert(0, running_reward)
-        # rospy.loginfo(values)
+        # values = [1 if value > 0.5 else 0 for value in values]
         values = torch.tensor(values, dtype=torch.float, requires_grad=True).reshape(-1)  # Reshape to match discounted_rewards
-        # discounted_rewards = torch.tensor(discounted_rewards, requires_grad=True)
-        # value_loss = F.mse_loss(values, discounted_rewards)
-        # ground_truth = [1 for reward in rewards if reward > ]
+
         rewards = [1 if reward > 0.5 else 0 for reward in rewards]
         rewards = torch.tensor(rewards, dtype=torch.float)
+        
         value_loss = F.binary_cross_entropy(values, rewards)
 
         # Compute entropy regularization term
@@ -548,7 +548,7 @@ class ProximalPolicyOptimization:
         y = self.heuristic_tensor[0].cpu().tolist()[1]
 
         heading = float(np.arctan2(y,x)) - orient.z
-
+        
         self.orientation_tensor = torch.tensor([[heading]])
 
         ang_vel = msg.angular_velocity

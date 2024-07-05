@@ -29,7 +29,7 @@ class CNN_Branch(nn.Module):
 
     
 LOG_SIG_MIN = 0
-LOG_SIG_MAX = 0.5
+LOG_SIG_MAX = 0.01
 
 MAX_X_VEL = 3.5
 MAX_Y_VEL = 0.5
@@ -120,7 +120,7 @@ class PolicyNetwork(nn.Module):
         return mean, std
     
 
-    
+import rospy
 class ValueNetwork(nn.Module):
     def __init__(self, hidden_size):
         super(ValueNetwork, self).__init__()
@@ -143,7 +143,9 @@ class ValueNetwork(nn.Module):
         x = self.dense_net(x)
         x = self.value_sign_layer1(x)
         x = self.value_sign_layer2(x)
+        # rospy.loginfo(f"input: {x}")
         x = self.fc_final_value(x)
+        # rospy.loginfo(f"output: {x}")
 
         x = torch.softmax(x, dim=1)  # Apply softmax activation for classification
         return x

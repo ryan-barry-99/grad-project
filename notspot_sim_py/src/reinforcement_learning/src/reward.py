@@ -79,7 +79,7 @@ class Reward:
     def calc_reward(self, msg: String):
         self.rewards = {
             # "hits_wall": -10,
-            "reach_goal": 100,
+            # "reach_goal": 100,
             # "not_moving": 0,
             # "upright": 0,
             # "fell": -1,
