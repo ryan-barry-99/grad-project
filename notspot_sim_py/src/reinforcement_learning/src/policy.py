@@ -54,12 +54,12 @@ class ProximalPolicyOptimization:
             self.policy_network.load_state_dict(torch.load(policy_model_path))
             self.value_network.load_state_dict(torch.load(value_model_path))
 
-        got_loss_folder = False
-        while not got_loss_folder:
-            if rospy.has_param('/RL/runs/loss_folder'):
-                self.loss_folder = rospy.get_param('/RL/runs/loss_folder')
-                self.num_updates = int(len(os.listdir(self.loss_folder))/2)
-                got_loss_folder = True
+        got_trajectory_folder = False
+        while not got_trajectory_folder:
+            if rospy.has_param('/RL/runs/trajectory_folder'):
+                self.trajectory_folder = rospy.get_param('/RL/runs/trajectory_folder')
+                self.num_updates = int(len(os.listdir(self.trajectory_folder))/2)
+                got_trajectory_folder = True
 
         
         # Initialize policy and value networks
@@ -174,6 +174,7 @@ class ProximalPolicyOptimization:
         self.environment = msg.data
 
     def step_callback(self, msg: Bool):
+
         if msg.data:
             if self.new_episode:
                 self.go = False
@@ -183,23 +184,22 @@ class ProximalPolicyOptimization:
                 if self.ending_goal > self.furthest_goal:
                     self.furthest_goal = self.ending_goal
 
-                with open(f'{self.steps_folder}/episode_{self.episode_num}.txt', 'w') as file:
-                    file.write(f"{self.lifespan}")
-                with open(f'{self.goal_folder}/episode_{self.episode_num}.txt', 'w') as file:
-                    if self.ending_goal < self.closest_goal:
-                        self.closest_goal = self.ending_goal
-                    if self.ending_goal > self.furthest_goal:
-                        self.furthest_goal = self.ending_goal
-                    file.write(f"{self.closest_goal}\n{self.furthest_goal}\n{self.ending_goal}")
+                data = {
+                    "lifespan": self.lifespan,
+                    "closest_goal": self.closest_goal,
+                    "furthest_goal": self.furthest_goal,
+                    "ending_goal": self.ending_goal,
+                    "last_known_environment": self.last_known_environment
+                }
+
+                with open(f'{self.episode_folder}/episode_{self.episode_num}.pkl', 'wb') as file:
+                    pickle.dump(data, file)
+
                     self.closest_goal = np.inf
                     self.furthest_goal = 0
-                with open(f'{self.distance_folder}/episode_{self.episode_num}.txt', 'w') as file:
-                    file.write(f"{self.total_distance_traveled}\n{self.starting_distance}")
                     self.total_distance_traveled = 0
                     self.starting_distance = 0
-                with open(f'{self.environment_folder}/episode_{self.episode_num}.txt', 'w') as file:
-                    file.write(f"{self.last_known_environment}")
-                #     self.last_known_environment = self.environment
+                
                 self.episode_num += 1
                 rospy.loginfo(f"Starting Trajectory {self.episode_num}")
                 if self.buffer.length >= 1:
@@ -363,14 +363,14 @@ class ProximalPolicyOptimization:
         # policy_loss = self.compute_policy_loss(old_log_probs=old_log_probs, new_log_probs=new_log_probs, advantages=advantages)
         # value_loss = self.compute_value_loss(values=values, rewards=rewards)
         policy_loss, value_loss = self.compute_loss(old_log_probs, new_log_probs, advantages, vals, rewards)
-        with open(f'{self.loss_folder}/policy/loss_{self.num_updates}.txt', 'w') as f:
-            f.write(f"{policy_loss}")
-
-        with open(f'{self.loss_folder}/value/loss_{self.num_updates}.txt', 'w') as f:
-            f.write(f"{value_loss}")
-
-        with open(f'{self.rewards_folder}/update_{self.num_updates}.txt', 'w') as f:
-            f.write(f"{self.total_rewards}\n{self.hyperparameters['max_trajectory_length']}")
+        trajectory_stats = {
+            "policy_loss": float(policy_loss),
+            "value_loss": float(value_loss),
+            "total_rewards": self.total_rewards,
+            "max_trajectory_length": self.hyperparameters['max_trajectory_length']
+        }
+        with open(f'{self.trajectory_folder}/trajectory_{self.num_updates}.pkl', 'wb') as f:
+            pickle.dump(trajectory_stats, f)
             self.total_rewards = 0
         
         self.num_updates += 1
@@ -455,31 +455,12 @@ class ProximalPolicyOptimization:
 
     def initialize_episodes(self):
         while not self.init_rewards_dir:
-            if rospy.has_param('/RL/runs/rewards_folder'):
-                self.rewards_folder = rospy.get_param('/RL/runs/rewards_folder')
-                self.episode_num = len(os.listdir(self.rewards_folder))
+            if rospy.has_param('/RL/runs/episode_folder'):
+                self.episode_folder = rospy.get_param('/RL/runs/episode_folder')
+                self.episode_num = len(os.listdir(self.episode_folder))
                 self.new_episode = False
                 self.init_rewards_dir = True
 
-        while not self.init_steps_dir:
-            if rospy.has_param('/RL/runs/steps_folder'):
-                self.steps_folder = rospy.get_param('/RL/runs/steps_folder')
-                self.init_steps_dir = True
-
-        while not self.init_goal_dir:
-            if rospy.has_param('/RL/runs/goals_folder'):
-                self.goal_folder = rospy.get_param('/RL/runs/goals_folder')
-                self.init_goal_dir = True
-
-        while not self.init_distance_dir:
-            if rospy.has_param('/RL/runs/distance_folder'):
-                self.distance_folder = rospy.get_param('/RL/runs/distance_folder')
-                self.init_distance_dir = True
-
-        while not self.init_environment_dir:
-            if rospy.has_param('/RL/runs/environment_folder'):
-                self.environment_folder = rospy.get_param('/RL/runs/environment_folder')
-                self.init_environment_dir = True
                 
 
     def rgb_image_callback(self, img: Image):

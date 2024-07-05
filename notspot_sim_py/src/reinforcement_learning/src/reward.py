@@ -55,9 +55,9 @@ class Reward:
 
     def initialize_rewards(self):
         while not self.init_rewards_dir:
-            if rospy.has_param('/RL/runs/rewards_folder'):
-                self.rewards_folder = rospy.get_param('/RL/runs/rewards_folder')
-                self.episode_num = len(os.listdir(self.rewards_folder))
+            if rospy.has_param('/RL/runs/episode_folder'):
+                self.episode_folder = rospy.get_param('/RL/runs/episode_folder')
+                self.episode_num = len(os.listdir(self.episode_folder))
                 self.total_reward = Float32()
                 self.new_episode = False
                 self.init_rewards_dir = True
