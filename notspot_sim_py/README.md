@@ -9,7 +9,7 @@ The robot is capable of walking, I have a bunch of videos on my [YouTube channel
 
 If you are interested in the C++ version, make sure to check [this](https://github.com/lnotspotl/notspot_sim_cpp) repository out.
 
-<img src="notspot_sim_py/resources/notspot_render_new1" width="233"> <img src="notspot_sim_py/resources/notspot_render_new2" width="233"> <img src="notspot_sim_py/resources/notspot_render_new3" width="233"> 
+<img src="resources/notspot_render_new1" width="233"> <img src="resources/notspot_render_new2" width="233"> <img src="resources/notspot_render_new3" width="233"> 
 
 ## Setup
 ```
