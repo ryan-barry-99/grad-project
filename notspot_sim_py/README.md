@@ -34,16 +34,16 @@ Rest controller, Stand Controller, Trot gait controller and Crawl gait controlle
 Gazebo.
 
 ### Rest Controller
-<img src="notspot_sim_py/resources/1rest_controller.gif" width="400">
+<img src="resources/1rest_controller.gif" width="400">
 
 ### Stand Controller
-<img src="notspot_sim_py/resources/1stand_controller.gif" width="400">
+<img src="resources/1stand_controller.gif" width="400">
 
 ### Trot Gait Controller
-<img src="notspot_sim_py/resources/1trot_gait_controller.gif" width="400">
+<img src="resources/1trot_gait_controller.gif" width="400">
 
 ### Crawl Gait Controller
-<img src="notspot_sim_py/resources/1crawl_gait_controller.gif" width="400">
+<img src="resources/1crawl_gait_controller.gif" width="400">
 
 
 ## Other notes
